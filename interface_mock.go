@@ -5,6 +5,7 @@
 //
 //	mockgen -source interface.go -destination interface_mock.go -package pgh
 //
+
 // Package pgh is a generated GoMock package.
 package pgh
 
@@ -115,4 +116,42 @@ func (m *MockIBatcher) SendBatch(ctx context.Context, b *pgx.Batch) pgx.BatchRes
 func (mr *MockIBatcherMockRecorder) SendBatch(ctx, b any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendBatch", reflect.TypeOf((*MockIBatcher)(nil).SendBatch), ctx, b)
+}
+
+// MockITransactionBeginner is a mock of ITransactionBeginner interface.
+type MockITransactionBeginner struct {
+	ctrl     *gomock.Controller
+	recorder *MockITransactionBeginnerMockRecorder
+}
+
+// MockITransactionBeginnerMockRecorder is the mock recorder for MockITransactionBeginner.
+type MockITransactionBeginnerMockRecorder struct {
+	mock *MockITransactionBeginner
+}
+
+// NewMockITransactionBeginner creates a new mock instance.
+func NewMockITransactionBeginner(ctrl *gomock.Controller) *MockITransactionBeginner {
+	mock := &MockITransactionBeginner{ctrl: ctrl}
+	mock.recorder = &MockITransactionBeginnerMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockITransactionBeginner) EXPECT() *MockITransactionBeginnerMockRecorder {
+	return m.recorder
+}
+
+// Begin mocks base method.
+func (m *MockITransactionBeginner) Begin(arg0 context.Context) (pgx.Tx, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Begin", arg0)
+	ret0, _ := ret[0].(pgx.Tx)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Begin indicates an expected call of Begin.
+func (mr *MockITransactionBeginnerMockRecorder) Begin(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Begin", reflect.TypeOf((*MockITransactionBeginner)(nil).Begin), arg0)
 }
