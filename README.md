@@ -1,6 +1,10 @@
 # PGH (PGX Helpers)
 
-A Go package that provides helper functions and utilities for working with [pgx](https://github.com/jackc/pgx) and [pgxscan](https://github.com/jackc/pgxscan).
+A Go package that provides helper functions to combine the power of:
+
+- [Squirrel](https://github.com/n-r-w/squirrel) - SQL builder
+- [pgx](https://github.com/jackc/pgx) - PostgreSQL driver
+- [scany](https://github.com/georgysavva/scany) - Scanning query results into Golang structs
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/n-r-w/pgh.svg)](https://pkg.go.dev/github.com/n-r-w/pgh)
 [![Go Report Card](https://goreportcard.com/badge/github.com/n-r-w/pgh)](https://goreportcard.com/report/github.com/n-r-w/pgh)
@@ -117,14 +121,10 @@ if err != nil {
         // Maps to PostgreSQL error code '23503'
     }
 }
-
-// For more PostgreSQL error codes, refer to:
-// https://www.postgresql.org/docs/16/errcodes-appendix.html
 ```
 
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+For more PostgreSQL error codes, refer to:
+<https://www.postgresql.org/docs/17/errcodes-appendix.html>
 
 ## License
 
