@@ -1,0 +1,249 @@
+// Package pgh provides helpers for working with pgx
+package pgh
+
+import (
+	"context"
+	"errors"
+	"fmt"
+
+	"github.com/georgysavva/scany/v2/pgxscan"
+	pgx "github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
+)
+
+// Helpers for working with pgx plain queries in combination with pgxscan
+
+// Args is a slice of values for binding.
+// Used to explicitly separate query parameters from other arguments.
+type Args []any
+
+// ExecPlain executes a modification query. Querier can be either pgx.Tx or pg_types.Pool
+func ExecPlain(ctx context.Context, querier IQuerier, sql string, args Args) (pgconn.CommandTag, error) {
+	var (
+		tag pgconn.CommandTag
+		err error
+	)
+
+	if tag, err = querier.Exec(ctx, sql, args...); err != nil {
+		return tag, fmt.Errorf("sql exec: %w [%s]", err, truncSQL(sql))
+	}
+
+	return tag, nil
+}
+
+// SelectPlain executes a query. Querier can be either pgx.Tx or pg_types.Pool
+func SelectPlain[T any](ctx context.Context, querier IQuerier, sql string, dst *[]T, args Args) error {
+	if err := pgxscan.Select(ctx, querier, dst, sql, args...); err != nil {
+		return fmt.Errorf("sql select: %w [%s]", err, truncSQL(sql))
+	}
+
+	return nil
+}
+
+// SelectFuncPlain executes a query and passes each row to function f.
+// Querier can be either pgx.Tx or pg_types.Pool.
+func SelectFuncPlain(ctx context.Context, querier IQuerier, sql string, args Args,
+	f func(pgx.Row) error,
+) error {
+	rows, err := querier.Query(ctx, sql, args...)
+	if err != nil {
+		return fmt.Errorf("sql select: %w [%s]", err, truncSQL(sql))
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		if err := f(rows); err != nil {
+			return err
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("sql select: %w [%s]", err, truncSQL(sql))
+	}
+
+	return nil
+}
+
+// SelectOnePlain executes a query. Querier can be either pgx.Tx or pg_types.Pool.
+// dst must contain a variable, not a slice.
+func SelectOnePlain[T any](ctx context.Context, querier IQuerier, sql string, dst *T, args Args) error {
+	if err := pgxscan.Get(ctx, querier, dst, sql, args...); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// we don't need the original error, it contains extra service information that will come in the response
+			return pgx.ErrNoRows
+		}
+
+		return fmt.Errorf("sql select: %w [%s]", err, truncSQL(sql))
+	}
+
+	return nil
+}
+
+// ExecSplitPlain splits queries into groups of splitSize and executes them separately within a transaction.
+// tx can be either pgx.Tx or pg_types.Pool
+// ExecSplitPlain splits queries into groups of splitSize and executes them separately within a transaction.
+// tx can be either pgx.Tx or pg_types.Pool.
+func ExecSplitPlain(
+	ctx context.Context,
+	tx IBatcher,
+	queries []string,
+	args []Args,
+	splitSize int,
+) (rowsAffected int64, err error) {
+	var (
+		l     = len(queries)
+		idxTo int
+		ra    int64
+	)
+
+	for idx := 0; idx < l; idx += splitSize {
+		if idxTo = idx + splitSize; idxTo > l {
+			idxTo = l
+		}
+		if ra, err = execSplitPlainHelper(ctx, tx, queries[idx:idxTo], args[idx:idxTo]); err != nil {
+			return 0, err
+		}
+		rowsAffected += ra
+	}
+	return rowsAffected, nil
+}
+
+func execSplitPlainHelper(
+	ctx context.Context,
+	tx IBatcher,
+	queries []string,
+	args []Args,
+) (rowsAffected int64, err error) {
+	batch := pgx.Batch{}
+
+	for idx, query := range queries {
+		batch.Queue(query, args[idx]...)
+	}
+
+	return SendBatch(ctx, tx, &batch)
+}
+
+// InsertSplitPlain splits queries into groups of splitSize and executes them separately within a transaction.
+// values - rows with the same number of values in each. tx can be either pgx.Tx or pg_types.Pool.
+// Use this when COPY cannot be used, for example, when ON CONFLICT is required.
+func InsertSplitPlain(
+	ctx context.Context,
+	tx IBatcher,
+	sql string,
+	values []Args,
+	splitSize int,
+) (rowsAffected int64, err error) {
+	var (
+		l     = len(values)
+		idxTo int
+	)
+
+	batch := pgx.Batch{}
+	for idx := 0; idx < l; idx += splitSize {
+		if idxTo = idx + splitSize; idxTo > l {
+			idxTo = l
+		}
+
+		batch.Queue(sql, values[idx:idxTo])
+	}
+
+	return SendBatch(ctx, tx, &batch)
+}
+
+// SendBatch executes a batch of queries with error checking. tx can be either pgx.Tx or pg_types.Pool.
+func SendBatch(ctx context.Context, tx IBatcher, batch *pgx.Batch) (rowsAffected int64, err error) {
+	if batch.Len() == 0 {
+		return 0, nil
+	}
+
+	br := tx.SendBatch(ctx, batch)
+	defer func() { _ = br.Close() }()
+	for i := range batch.Len() {
+		tag, err := br.Exec()
+		if err != nil {
+			return 0, fmt.Errorf("pgh.SendBatch exec at index %d: %w", i, err)
+		}
+		rowsAffected += tag.RowsAffected()
+	}
+	return rowsAffected, nil
+}
+
+// SendBatchQuery executes a batch of queries with error checking.
+// tx can be either pgx.Tx or pg_types.Pool.
+// Returns query results as a single slice.
+func SendBatchQuery[T any](ctx context.Context, tx IBatcher, batch *pgx.Batch, dst *[]T) error {
+	if batch.Len() == 0 {
+		return nil
+	}
+
+	br := tx.SendBatch(ctx, batch)
+	defer func() { _ = br.Close() }()
+	for i := range batch.Len() {
+		rows, err := br.Query()
+		if err != nil {
+			return fmt.Errorf("pgh.SendBatchQuery query at index %d: %w", i, err)
+		}
+
+		var dstBatch []T
+		if err := pgxscan.ScanAll(&dstBatch, rows); err != nil {
+			return fmt.Errorf("pgh.SendBatchQuery scan at index %d: %w", i, err)
+		}
+
+		*dst = append(*dst, dstBatch...)
+	}
+	return nil
+}
+
+// InsertValuesPlain executes a query to insert a group of values.
+// sql should be in the form "INSERT INTO table (col1, col2)" without VALUES.
+// VALUES is added automatically.
+func InsertValuesPlain(ctx context.Context, querier IQuerier, sql string, values []Args) error {
+	if len(values) == 0 {
+		return nil
+	}
+
+	var (
+		args        = make(Args, 0, len(values[0])*len(values))
+		targetSQL   = sql + " VALUES "
+		columnCount = len(values[0])
+	)
+	for _, v := range values {
+		if len(v) != columnCount {
+			return fmt.Errorf("pgh.InsertValues: all values must have the same length. sql: %s", truncSQL(sql))
+		}
+		args = append(args, v...)
+	}
+
+	for i := range values {
+		if i != 0 {
+			targetSQL += ","
+		}
+		targetSQL += "("
+		for j := range columnCount {
+			if j != 0 {
+				targetSQL += ","
+			}
+			targetSQL += fmt.Sprintf("$%d", i*columnCount+j+1)
+		}
+		targetSQL += ")"
+	}
+
+	if _, err := querier.Exec(ctx, targetSQL, args...); err != nil {
+		return fmt.Errorf("pgh.InsertValues: %w [%s]", err, truncSQL(targetSQL))
+	}
+
+	return nil
+}
+
+const sqlTruncLen = 100
+
+// truncSQL truncates sql to sqlTruncLen characters
+func truncSQL(sql string) string {
+	if len(sql) > sqlTruncLen {
+		return sql[0:sqlTruncLen] + "..."
+	}
+
+	return sql
+}
+
+// close closes io.Closer with error logging
