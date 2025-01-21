@@ -1,7 +1,7 @@
-package pgh
+package px
 
-//go:generate mockgen -source interface.go -destination interface_mock.go -package pgh
-//go:generate mockgen -package pgh -destination pgx_mock.go github.com/jackc/pgx/v5 BatchResults,Row,Rows,Tx
+//go:generate mockgen -source interface.go -destination interface_mock.go -package px
+//go:generate mockgen -package px -destination pgx_mock.go github.com/jackc/pgx/v5 BatchResults,Row,Rows,Tx
 
 import (
 	"context"
@@ -23,5 +23,5 @@ type IBatcher interface {
 
 // ITransactionBeginner is a subset of pgxpool.Pool, pgx.Conn for starting transactions.
 type ITransactionBeginner interface {
-	Begin(context.Context) (pgx.Tx, error)
+	BeginTx(context.Context, pgx.TxOptions) (pgx.Tx, error)
 }

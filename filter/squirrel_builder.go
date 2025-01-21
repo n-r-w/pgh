@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/n-r-w/pgh"
+	"github.com/n-r-w/pgh/v2"
 	sq "github.com/n-r-w/squirrel"
 )
 

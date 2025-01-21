@@ -1,4 +1,4 @@
-package pgh
+package px
 
 import (
 	"context"
@@ -6,15 +6,11 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/n-r-w/pgh/v2"
 	sq "github.com/n-r-w/squirrel"
 )
 
 // Helpers for working with Squirrel
-
-// Builder creates a new instance of squirrel.StatementBuilderType for building queries
-func Builder() sq.StatementBuilderType {
-	return sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
-}
 
 // Exec executes a modification query. Querier can be either pgx.Tx or pg_types.Pool
 func Exec(ctx context.Context, querier IQuerier, sqlizer sq.Sqlizer) (pgconn.CommandTag, error) {
@@ -25,7 +21,7 @@ func Exec(ctx context.Context, querier IQuerier, sqlizer sq.Sqlizer) (pgconn.Com
 	)
 
 	if sql, args, err = sqToSQL(ctx, sqlizer); err != nil {
-		return pgconn.CommandTag{}, fmt.Errorf("pgh.Exec to sql: %w", err)
+		return pgconn.CommandTag{}, fmt.Errorf("pgx.Exec to sql: %w", err)
 	}
 
 	return ExecPlain(ctx, querier, sql, args)
@@ -40,7 +36,7 @@ func Select[T any](ctx context.Context, querier IQuerier, sqlizer sq.Sqlizer, ds
 	)
 
 	if sql, args, err = sqToSQL(ctx, sqlizer); err != nil {
-		return fmt.Errorf("pgh.Select to sql: %w", err)
+		return fmt.Errorf("pgx.Select to sql: %w", err)
 	}
 
 	return SelectPlain(ctx, querier, sql, dst, args)
@@ -55,7 +51,7 @@ func SelectFunc(ctx context.Context, querier IQuerier, sqlizer sq.Sqlizer, f fun
 	)
 
 	if sql, args, err = sqToSQL(ctx, sqlizer); err != nil {
-		return fmt.Errorf("pgh.SelectFunc to sql: %w", err)
+		return fmt.Errorf("pgx.SelectFunc to sql: %w", err)
 	}
 
 	return SelectFuncPlain(ctx, querier, sql, args, f)
@@ -71,7 +67,7 @@ func SelectOne[T any](ctx context.Context, querier IQuerier, sqlizer sq.Sqlizer,
 	)
 
 	if sql, args, err = sqToSQL(ctx, sqlizer); err != nil {
-		return fmt.Errorf("pgh.SelectOne to sql: %w", err)
+		return fmt.Errorf("pgx.SelectOne to sql: %w", err)
 	}
 
 	return SelectOnePlain(ctx, querier, sql, dst, args)
@@ -79,10 +75,12 @@ func SelectOne[T any](ctx context.Context, querier IQuerier, sqlizer sq.Sqlizer,
 
 // ExecSplit splits queries into groups of splitSize and executes them separately within a transaction.
 // tx can be either pgx.Tx or pg_types.Pool
-func ExecSplit(ctx context.Context, tx IBatcher, queries []sq.Sqlizer, splitSize int) (rowsAffected int64, err error) {
+func ExecSplit(
+	ctx context.Context, tx IBatcher, queries []sq.Sqlizer, splitSize int,
+) (rowsAffected int64, err error) {
 	var (
 		queriesSQL = make([]string, 0, len(queries))
-		args       = make([]Args, 0, len(queries))
+		args       = make([]pgh.Args, 0, len(queries))
 	)
 
 	for _, query := range queries {
@@ -108,7 +106,7 @@ func InsertSplit(
 	ctx context.Context,
 	tx IBatcher,
 	base sq.InsertBuilder,
-	values []Args,
+	values []pgh.Args,
 	splitSize int,
 ) (rowsAffected int64, err error) {
 	var (
@@ -147,7 +145,7 @@ func InsertSplitQuery[T any](
 	ctx context.Context,
 	tx IBatcher,
 	base sq.InsertBuilder,
-	values []Args,
+	values []pgh.Args,
 	splitSize int,
 	dst *[]T,
 ) (err error) {
