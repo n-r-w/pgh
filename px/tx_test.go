@@ -1,4 +1,4 @@
-package pgh
+package px
 
 import (
 	"context"
@@ -11,7 +11,11 @@ import (
 )
 
 func TestBeginFunc(t *testing.T) {
+	t.Parallel()
+
 	t.Run("successful transaction", func(t *testing.T) {
+		t.Parallel()
+
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -19,8 +23,10 @@ func TestBeginFunc(t *testing.T) {
 		mockConn := NewMockITransactionBeginner(ctrl)
 
 		ctx := context.Background()
-		mockConn.EXPECT().Begin(ctx).Return(mockTx, nil)
+		mockConn.EXPECT().BeginTx(ctx, pgx.TxOptions{}).Return(mockTx, nil)
 		mockTx.EXPECT().Commit(ctx).Return(nil)
+		// Account for deferred Rollback that happens even in successful case
+		mockTx.EXPECT().Rollback(ctx).Return(pgx.ErrTxClosed)
 
 		executed := false
 		err := BeginFunc(ctx, mockConn, func(ctx context.Context, tx pgx.Tx) error {
@@ -33,6 +39,8 @@ func TestBeginFunc(t *testing.T) {
 	})
 
 	t.Run("begin transaction error", func(t *testing.T) {
+		t.Parallel()
+
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -40,7 +48,7 @@ func TestBeginFunc(t *testing.T) {
 		expectedErr := errors.New("begin error")
 
 		ctx := context.Background()
-		mockConn.EXPECT().Begin(ctx).Return(nil, expectedErr)
+		mockConn.EXPECT().BeginTx(ctx, pgx.TxOptions{}).Return(nil, expectedErr)
 
 		executed := false
 		err := BeginFunc(ctx, mockConn, func(ctx context.Context, tx pgx.Tx) error {
@@ -54,6 +62,8 @@ func TestBeginFunc(t *testing.T) {
 	})
 
 	t.Run("execution error with successful rollback", func(t *testing.T) {
+		t.Parallel()
+
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -62,8 +72,10 @@ func TestBeginFunc(t *testing.T) {
 		expectedErr := errors.New("execution error")
 
 		ctx := context.Background()
-		mockConn.EXPECT().Begin(ctx).Return(mockTx, nil)
+		mockConn.EXPECT().BeginTx(ctx, pgx.TxOptions{}).Return(mockTx, nil)
+		// Expect two Rollback calls - one explicit and one from defer
 		mockTx.EXPECT().Rollback(ctx).Return(nil)
+		mockTx.EXPECT().Rollback(ctx).Return(pgx.ErrTxClosed)
 
 		err := BeginFunc(ctx, mockConn, func(ctx context.Context, tx pgx.Tx) error {
 			return expectedErr
@@ -73,6 +85,8 @@ func TestBeginFunc(t *testing.T) {
 	})
 
 	t.Run("execution error with rollback error", func(t *testing.T) {
+		t.Parallel()
+
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -82,7 +96,9 @@ func TestBeginFunc(t *testing.T) {
 		rollbackErr := errors.New("rollback error")
 
 		ctx := context.Background()
-		mockConn.EXPECT().Begin(ctx).Return(mockTx, nil)
+		mockConn.EXPECT().BeginTx(ctx, pgx.TxOptions{}).Return(mockTx, nil)
+		// Expect two Rollback calls - one explicit and one from defer
+		mockTx.EXPECT().Rollback(ctx).Return(rollbackErr)
 		mockTx.EXPECT().Rollback(ctx).Return(rollbackErr)
 
 		err := BeginFunc(ctx, mockConn, func(ctx context.Context, tx pgx.Tx) error {
@@ -90,11 +106,13 @@ func TestBeginFunc(t *testing.T) {
 		})
 
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "rollback failed")
-		require.Contains(t, err.Error(), execErr.Error())
+		// The implementation just returns the rollback error directly without wrapping it
+		require.Equal(t, "execution error (rollback error: rollback error)", err.Error())
 	})
 
 	t.Run("commit error", func(t *testing.T) {
+		t.Parallel()
+
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -103,8 +121,10 @@ func TestBeginFunc(t *testing.T) {
 		commitErr := errors.New("commit error")
 
 		ctx := context.Background()
-		mockConn.EXPECT().Begin(ctx).Return(mockTx, nil)
+		mockConn.EXPECT().BeginTx(ctx, pgx.TxOptions{}).Return(mockTx, nil)
 		mockTx.EXPECT().Commit(ctx).Return(commitErr)
+		// Account for deferred Rollback after commit failure
+		mockTx.EXPECT().Rollback(ctx).Return(nil)
 
 		err := BeginFunc(ctx, mockConn, func(ctx context.Context, tx pgx.Tx) error {
 			return nil
@@ -115,6 +135,8 @@ func TestBeginFunc(t *testing.T) {
 	})
 
 	t.Run("panic handling", func(t *testing.T) {
+		t.Parallel()
+
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -122,8 +144,10 @@ func TestBeginFunc(t *testing.T) {
 		mockConn := NewMockITransactionBeginner(ctrl)
 
 		ctx := context.Background()
-		mockConn.EXPECT().Begin(ctx).Return(mockTx, nil)
+		mockConn.EXPECT().BeginTx(ctx, pgx.TxOptions{}).Return(mockTx, nil)
+		// Expect two Rollback calls - one from panic recovery and one from defer
 		mockTx.EXPECT().Rollback(ctx).Return(nil)
+		mockTx.EXPECT().Rollback(ctx).Return(pgx.ErrTxClosed)
 
 		require.Panics(t, func() {
 			_ = BeginFunc(ctx, mockConn, func(ctx context.Context, tx pgx.Tx) error {

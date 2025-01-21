@@ -1,6 +1,6 @@
-module github.com/n-r-w/pgh
+module github.com/n-r-w/pgh/v2
 
-go 1.22
+go 1.23
 
 require (
 	github.com/georgysavva/scany/v2 v2.1.3
