@@ -7,8 +7,8 @@ A Go package that provides helper functions to combine the power of:
 - [database/sql](https://pkg.go.dev/database/sql) - Golang SQL package
 - [scany](https://github.com/georgysavva/scany) - Scanning query results into Golang structs
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/n-r-w/pgh.svg)](https://pkg.go.dev/github.com/n-r-w/pgh)
-[![Go Report Card](https://goreportcard.com/badge/github.com/n-r-w/pgh)](https://goreportcard.com/report/github.com/n-r-w/pgh)
+[![Go Reference](https://pkg.go.dev/badge/github.com/n-r-w/pgh.svg)](https://pkg.go.dev/github.com/n-r-w/pgh/v2)
+[![Go Report Card](https://goreportcard.com/badge/github.com/n-r-w/pgh)](https://goreportcard.com/report/github.com/n-r-w/pgh/v2)
 
 ## Purpose and Core Functionality
 
