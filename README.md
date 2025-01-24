@@ -31,6 +31,12 @@ The PGH project is a Go package that provides helper functions to combine the po
 - Options for adding conditions, sorting, searching, and pagination to queries
 - PostgreSQL error handling with specific error code support
 
+## Additional Functionality
+
+- [Transaction Manager (txmgr)](txmgr/README.md) - A database-agnostic transaction management system that provides clean and consistent handling of database transactions, isolation levels, and nested transactions
+- [Transaction Manager implementation for PostgreSQL (pgdb)](px/db/README.md) - A PostgreSQL-specific implementation of the ITransactionInformer and ITransactionBeginner interfaces from the txmgr package
+- [Client-side sharding (buckets)](px/db/buckets/README.md) - Support for distributing data across multiple database shards using virtual buckets (schemas) for PostgreSQL databases
+
 ## Getting Started
 
 ```bash

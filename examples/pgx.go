@@ -82,15 +82,15 @@ func ExampleBatchOperations(ctx context.Context, db px.IBatcher, users []User) e
 func ExampleErrorHandling(err error) {
 	if err != nil {
 		switch {
-		case pgh.IsNoRows(err):
+		case px.IsNoRows(err):
 			// Handle no rows found
 			// Handles both pgx.ErrNoRows and PostgreSQL 'no_data_found' error code
 			fmt.Println("No rows found")
-		case pgh.IsUniqueViolation(err):
+		case px.IsUniqueViolation(err):
 			// Handle unique constraint violation
 			// Maps to PostgreSQL error code '23505'
 			fmt.Println("Unique constraint violation")
-		case pgh.IsForeignKeyViolation(err):
+		case px.IsForeignKeyViolation(err):
 			// Handle foreign key violation
 			// Maps to PostgreSQL error code '23503'
 			fmt.Println("Foreign key violation")
