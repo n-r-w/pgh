@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/n-r-w/pgh/v2/txmgr"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Wrapper is a wrapper over pgx.
@@ -143,7 +144,7 @@ func (i *Wrapper) LargeObjects() pgx.LargeObjects {
 
 // logQueryHelper performs query logging and calls function f.
 func (i *Wrapper) logQueryHelper(ctx context.Context, command, query string, args []any, f func() error) {
-	if i.db.logger == nil || !i.logQueries {
+	if !i.logQueries {
 		_ = f() // we're not interested in the result since it should be handled inside f
 		return
 	}
@@ -152,20 +153,26 @@ func (i *Wrapper) logQueryHelper(ctx context.Context, command, query string, arg
 
 	err := f()
 
-	format := "database=%s command=%s latency=%s args=%v"
-	values := []any{i.db.name, command, time.Since(start), args}
-	if query != "" {
-		format += " query=%s"
-		values = append(values, query)
+	attrs := []any{
+		"database", i.db.name,
+		"command", command,
+		"latency", time.Since(start),
+		"args", args,
 	}
-	if err != nil {
-		format += " error=%v"
-		values = append(values, err)
+
+	if query != "" {
+		attrs = append(attrs, "query", query)
+	}
+
+	spanContext := trace.SpanFromContext(ctx).SpanContext()
+	if spanContext.TraceID().IsValid() {
+		attrs = append(attrs, "trace_id", spanContext.TraceID().String())
 	}
 
 	if err != nil {
-		i.db.logger.Errorf(ctx, format, values...)
+		attrs = append(attrs, "error", err)
+		i.db.logger.Error(ctx, "dbquery", attrs...)
 	} else {
-		i.db.logger.Debugf(ctx, format, values...)
+		i.db.logger.Debug(ctx, "dbquery", attrs...)
 	}
 }

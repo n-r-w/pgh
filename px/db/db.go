@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/n-r-w/bootstrap"
-	"github.com/n-r-w/pgh/v2"
-	"github.com/n-r-w/pgh/v2/px/db/shared"
+	"github.com/n-r-w/ctxlog"
+	"github.com/n-r-w/pgh/v2/px/db/conn"
 
 	"github.com/cenkalti/backoff/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -24,21 +24,20 @@ type PxDB struct {
 	config *pgxpool.Config
 	pool   *pgxpool.Pool
 
-	logger pgh.ILogger
+	logger ctxlog.ILogger
 }
 
 var _ bootstrap.IService = (*PxDB)(nil)
 
 // New creates a new instance of PxDB.
 func New(opt ...Option) *PxDB {
-	p := &PxDB{}
+	p := &PxDB{
+		name:   "pgdb",
+		logger: ctxlog.NewStubWrapper(),
+	}
 
 	for _, o := range opt {
 		o(p)
-	}
-
-	if p.name == "" {
-		p.name = "pxdb"
 	}
 
 	return p
@@ -46,9 +45,7 @@ func New(opt ...Option) *PxDB {
 
 // Start starts the service.
 func (p *PxDB) Start(ctx context.Context) (err error) {
-	if p.logger != nil {
-		p.logger.Debugf(ctx, "starting pgdb for database %s", p.name)
-	}
+	p.logger.Debug(ctx, "starting pgdb", "database", p.name)
 
 	defer func() {
 		if err == nil && p.afterStartFunc != nil {
@@ -69,9 +66,7 @@ func (p *PxDB) Start(ctx context.Context) (err error) {
 		return fmt.Errorf("failed to create pgx pool for database %s: %w", p.name, err)
 	}
 
-	if p.logger != nil {
-		p.logger.Debugf(ctx, "checking connection to database %s", p.name)
-	}
+	p.logger.Debug(ctx, "checking database connection", "database", p.name)
 
 	if err = pool.Ping(ctx); err != nil {
 		pool.Close()
@@ -80,9 +75,7 @@ func (p *PxDB) Start(ctx context.Context) (err error) {
 
 	p.pool = pool
 
-	if p.logger != nil {
-		p.logger.Debugf(ctx, "connected to database %s", p.name)
-	}
+	p.logger.Debug(ctx, "database connection established", "database", p.name)
 
 	return nil
 }
@@ -106,8 +99,8 @@ func (p *PxDB) Info() bootstrap.Info {
 
 // Connection extracts transaction/pool from context and returns database interface implementation.
 // Use only at repository level. Returns IConnection interface implementation.
-func (p *PxDB) Connection(ctx context.Context, opt ...shared.ConnectionOption) shared.IConnection {
-	opts := &shared.ConnectionOptionData{}
+func (p *PxDB) Connection(ctx context.Context, opt ...conn.ConnectionOption) conn.IConnection {
+	opts := &conn.ConnectionOptionData{}
 	for _, o := range opt {
 		o(opts)
 	}

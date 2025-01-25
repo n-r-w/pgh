@@ -3,7 +3,7 @@ package bucket
 import (
 	"context"
 
-	"github.com/n-r-w/pgh/v2"
+	"github.com/n-r-w/ctxlog"
 )
 
 // Option option for bucket.DB.
@@ -31,7 +31,7 @@ func WithAfterStartFunc[T any](f func(context.Context, *DB[T]) error) Option[T] 
 }
 
 // WithLogger sets the logger.
-func WithLogger[T any](logger pgh.ILogger) Option[T] {
+func WithLogger[T any](logger ctxlog.ILogger) Option[T] {
 	return func(b *DB[T]) {
 		b.logger = logger
 	}

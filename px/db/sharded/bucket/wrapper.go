@@ -5,17 +5,17 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/n-r-w/pgh/v2/px/db/shared"
+	"github.com/n-r-w/pgh/v2/px/db/conn"
 	"github.com/n-r-w/pgh/v2/txmgr"
 )
 
 // bucketWrapper wrapper over IConnection that implements access to a specific bucket.
 type bucketWrapper struct {
-	db       shared.IConnection
+	db       conn.IConnection
 	bucketID BucketID
 }
 
-func newBucketWrapper(db shared.IConnection, bucketID BucketID) *bucketWrapper {
+func newBucketWrapper(db conn.IConnection, bucketID BucketID) *bucketWrapper {
 	return &bucketWrapper{
 		db:       db,
 		bucketID: bucketID,

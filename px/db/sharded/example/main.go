@@ -7,9 +7,9 @@ import (
 	"log"
 
 	"github.com/georgysavva/scany/v2/pgxscan"
+	"github.com/n-r-w/pgh/v2/px/db/conn"
 	"github.com/n-r-w/pgh/v2/px/db/sharded/bucket"
 	"github.com/n-r-w/pgh/v2/px/db/sharded/shard"
-	"github.com/n-r-w/pgh/v2/px/db/shared"
 )
 
 func main() {
@@ -104,7 +104,7 @@ func main() {
 	// Run a function across all buckets to count total users
 	var totalUsers int64
 	err := bucketDB.RunBucketFunc(ctx,
-		func(ctx context.Context, shardID shard.ShardID, bucketID bucket.BucketID, con shared.IConnection) error {
+		func(ctx context.Context, shardID shard.ShardID, bucketID bucket.BucketID, con conn.IConnection) error {
 			var count int
 			err := pgxscan.Get(ctx, con,
 				&count,

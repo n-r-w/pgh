@@ -9,8 +9,8 @@ import (
 	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/n-r-w/pgh/v2/px/db/conn"
 	"github.com/n-r-w/pgh/v2/px/db/sharded/shard"
-	"github.com/n-r-w/pgh/v2/px/db/shared"
 )
 
 type shardBatchInfo struct {
@@ -125,8 +125,8 @@ func (b *ShardBatch[TKEY]) ExecAll(ctx context.Context) error {
 	}
 	defer func() {
 		err := b.Close()
-		if b.db.logger != nil && err != nil {
-			b.db.logger.Errorf(ctx, "failed to close batch: %v", err)
+		if err != nil {
+			b.db.logger.Error(ctx, "failed to close batch", "error", err)
 		}
 	}()
 
@@ -153,7 +153,7 @@ func (b *ShardBatch[TKEY]) Query() (pgx.Rows, error) {
 func (b *ShardBatch[TKEY]) QueryRow() pgx.Row {
 	res, err := b.nextResult()
 	if err != nil {
-		return shared.NewErrRow(err)
+		return conn.NewErrRow(err)
 	}
 
 	return res.QueryRow()
@@ -189,9 +189,8 @@ func ShardBatchQueryAllFunc[TKEY any, TRES any](ctx context.Context, batch *Shar
 		return fmt.Errorf("ShardBatchQueryAllFunc: %w", err)
 	}
 	defer func() {
-		err := batch.Close()
-		if batch.db.logger != nil && err != nil {
-			batch.db.logger.Errorf(ctx, "failed to close batch: %v", err)
+		if err := batch.Close(); err != nil {
+			batch.db.logger.Error(ctx, "failed to close batch", "error", err)
 		}
 	}()
 

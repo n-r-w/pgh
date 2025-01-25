@@ -11,9 +11,9 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/n-r-w/bootstrap"
-	"github.com/n-r-w/pgh/v2"
+	"github.com/n-r-w/ctxlog"
+	"github.com/n-r-w/pgh/v2/px/db/conn"
 	"github.com/n-r-w/pgh/v2/px/db/sharded/shard"
-	"github.com/n-r-w/pgh/v2/px/db/shared"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -120,7 +120,7 @@ type DB[T any] struct {
 	shardByBucketID        map[BucketID]shard.ShardID
 	name                   string
 	runBucketFuncLimit     int
-	logger                 pgh.ILogger
+	logger                 ctxlog.ILogger
 
 	afterStartFunc func(context.Context, *DB[T]) error
 }
@@ -131,12 +131,16 @@ var _ bootstrap.IService = (*DB[any])(nil)
 func New[T any](shardDB *shard.DB, buckets []*BucketInfo,
 	shardKeyToBucketIDFunc ShardKeyToBucketIDFunc[T], opts ...Option[T],
 ) *DB[T] {
+	const defaultRunBucketFuncLimit = 10
+
 	b := &DB[T]{
 		shardDB:                shardDB,
 		shardKeyToBucketIDFunc: shardKeyToBucketIDFunc,
 		buckets:                buckets,
 		infoByShard:            make(map[shard.ShardID]*BucketInfo, len(buckets)),
 		shardByBucketID:        make(map[BucketID]shard.ShardID),
+		logger:                 ctxlog.NewStubWrapper(),
+		runBucketFuncLimit:     defaultRunBucketFuncLimit,
 	}
 
 	for _, bucket := range buckets {
@@ -148,11 +152,6 @@ func New[T any](shardDB *shard.DB, buckets []*BucketInfo,
 
 	for _, opt := range opts {
 		opt(b)
-	}
-
-	if b.runBucketFuncLimit <= 0 {
-		const defaultRunBucketFuncLimit = 10
-		b.runBucketFuncLimit = defaultRunBucketFuncLimit
 	}
 
 	return b
@@ -208,10 +207,10 @@ func (b *DB[T]) Info() bootstrap.Info {
 }
 
 // Connection returns IConnection interface implementation for the specified sharding key.
-func (b *DB[T]) Connection(ctx context.Context, shardKey T, opt ...shared.ConnectionOption) shared.IConnection {
-	var d shared.IConnection
+func (b *DB[T]) Connection(ctx context.Context, shardKey T, opt ...conn.ConnectionOption) conn.IConnection {
+	var d conn.IConnection
 	if shardID, bucketID, err := b.GetBucketByKey(shardKey); err != nil {
-		d = shared.NewDatabaseErrorWrapper(err)
+		d = conn.NewDatabaseErrorWrapper(err)
 	} else {
 		d = newBucketWrapper(b.ShardConnection(ctx, shardID, opt...), bucketID)
 	}
@@ -220,8 +219,8 @@ func (b *DB[T]) Connection(ctx context.Context, shardKey T, opt ...shared.Connec
 
 // ShardConnection returns IConnection interface implementation for the specified shardID.
 func (b *DB[T]) ShardConnection(ctx context.Context, shardID shard.ShardID,
-	opt ...shared.ConnectionOption,
-) shared.IConnection {
+	opt ...conn.ConnectionOption,
+) conn.IConnection {
 	return b.shardDB.Connection(ctx, shardID.String(), opt...)
 }
 
@@ -299,14 +298,14 @@ func NewBucketClusterFromDSN(dsn []shard.DSNInfo, bucketInfo []*BucketInfo,
 // RunBucketFunc executes a function for all buckets in the cluster.
 // The order of buckets is not defined.
 func (b *DB[T]) RunBucketFunc(ctx context.Context,
-	f func(ctx context.Context, shardID shard.ShardID, bucketID BucketID, con shared.IConnection) error,
+	f func(ctx context.Context, shardID shard.ShardID, bucketID BucketID, con conn.IConnection) error,
 ) error {
 	errGroup, ctxGroup := errgroup.WithContext(ctx)
 	errGroup.SetLimit(b.runBucketFuncLimit)
 
 	// the result is ignored, because we pass our errGroup to RunFunc
 	_ = b.shardDB.RunFunc(ctxGroup,
-		func(ctxFunc context.Context, shardID shard.ShardID, con shared.IConnection) error {
+		func(ctxFunc context.Context, shardID shard.ShardID, con conn.IConnection) error {
 			errGroup.Go(func() error {
 				for _, bucketInfo := range b.buckets {
 					if shardID != bucketInfo.ShardID {
@@ -344,7 +343,7 @@ func (b *DB[T]) RunBucketFunc(ctx context.Context,
 // RunShardFunc executes a function for all shards in the cluster.
 // The order of shards is not defined.
 func (b *DB[T]) RunShardFunc(ctx context.Context, f func(ctx context.Context,
-	shardID shard.ShardID, con shared.IConnection) error,
+	shardID shard.ShardID, con conn.IConnection) error,
 ) error {
 	return b.shardDB.RunFunc(ctx, f, len(b.infoByShard))
 }

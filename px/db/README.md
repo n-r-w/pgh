@@ -48,7 +48,7 @@ The `db.New()` function accepts various options to configure the database connec
 - `WithLogPxDBQueries()` - Enables query logging
 - `WithRestartPolicy(policy github.com/cenkalti/backoff/v5)` - Sets restart policy on errors. Only works when using <https://github.com/n-r-w/bootstrap>
 - `WithAfterStartFunc(f func(context.Context, *PxDB) error)` - Sets function to run after successful start
-- `WithLogger(logger pgh.ILogger)` - Sets custom logger implementation
+- `WithLogger(logger ctxlog.ILogger)` - Sets custom logger implementation
 
 ### Transaction Management
 
@@ -70,7 +70,7 @@ err := db.Begin(ctx, func(ctxTr context.Context) error {
 
 ### Query Execution
 
-Implements the `IConnection` interface from the [shared](../../shared/README.md) package, which allows executing SQL queries, batch operations, large objects, CopyFrom, and other operations.
+Implements the `IConnection` interface from the [conn](../../conn/README.md) package, which allows executing SQL queries, batch operations, large objects, CopyFrom, and other operations.
 
 ## Telemetry Package
 

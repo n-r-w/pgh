@@ -5,7 +5,7 @@ import (
 
 	"github.com/cenkalti/backoff/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/n-r-w/pgh/v2"
+	"github.com/n-r-w/ctxlog"
 )
 
 // Option option for PxDB.
@@ -63,7 +63,7 @@ func WithAfterStartFunc(f func(context.Context, *PxDB) error) Option {
 }
 
 // WithLogger sets the logger.
-func WithLogger(logger pgh.ILogger) Option {
+func WithLogger(logger ctxlog.ILogger) Option {
 	return func(p *PxDB) {
 		p.logger = logger
 	}

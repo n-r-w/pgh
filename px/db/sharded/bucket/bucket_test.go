@@ -2,17 +2,16 @@ package bucket
 
 import (
 	"context"
-	"log/slog"
 	"strconv"
 	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/georgysavva/scany/v2/pgxscan"
-	"github.com/n-r-w/pgh/v2"
+	"github.com/n-r-w/ctxlog"
 	"github.com/n-r-w/pgh/v2/px/db"
+	"github.com/n-r-w/pgh/v2/px/db/conn"
 	"github.com/n-r-w/pgh/v2/px/db/sharded/shard"
-	"github.com/n-r-w/pgh/v2/px/db/shared"
 	"github.com/n-r-w/testdock/v2"
 	"github.com/stretchr/testify/require"
 )
@@ -20,12 +19,14 @@ import (
 func TestBucketDB(t *testing.T) {
 	t.Parallel()
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	t.Cleanup(cancel)
+	// put logger to context
+	ctx := ctxlog.ToTestContext(context.Background(), t)
+	// create a wrapper for ctxlog
+	logWrapper := ctxlog.NewWrapper()
 
-	slog.SetLogLoggerLevel(slog.LevelDebug)
-	logger, err := pgh.NewSlogLogger(slog.Default(), "bucketDBtest")
-	require.NoError(t, err)
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithTimeout(ctx, time.Minute)
+	t.Cleanup(cancel)
 
 	_, info1 := testdock.GetPgxPool(t, testdock.DefaultPostgresDSN)
 	_, info2 := testdock.GetPgxPool(t, testdock.DefaultPostgresDSN)
@@ -63,10 +64,10 @@ func TestBucketDB(t *testing.T) {
 			},
 		},
 		[]shard.Option{
-			shard.WithLogger(logger),
+			shard.WithLogger(logWrapper),
 		},
 		[]Option[string]{
-			WithLogger[string](logger),
+			WithLogger[string](logWrapper),
 		},
 	)
 
@@ -86,7 +87,7 @@ func TestBucketDB(t *testing.T) {
 	// check that the total amount of data in the buckets is correct
 	var totalCount atomic.Int64
 	require.NoError(t, bucketDB.RunBucketFunc(ctx,
-		func(ctx context.Context, shardID shard.ShardID, bucketID BucketID, con shared.IConnection) error {
+		func(ctx context.Context, shardID shard.ShardID, bucketID BucketID, con conn.IConnection) error {
 			var count int
 			require.NoError(t, pgxscan.Get(ctx, con, &count, "SELECT COUNT(*) FROM __bucket__.test"))
 			totalCount.Add(int64(count))

@@ -8,7 +8,7 @@ import (
 
 	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/jackc/pgx/v5"
-	"github.com/n-r-w/pgh/v2/px/db/shared"
+	"github.com/n-r-w/pgh/v2/px/db/conn"
 	"github.com/n-r-w/pgh/v2/txmgr"
 	"github.com/n-r-w/testdock/v2"
 	"github.com/stretchr/testify/require"
@@ -40,7 +40,7 @@ func TestPxDB(t *testing.T) {
 	require.False(t, pgdbImpl.InTransaction(ctx))
 
 	// проверка databaseWrapper
-	iwrapper := pgdbImpl.Connection(ctx, shared.WithLogQueries())
+	iwrapper := pgdbImpl.Connection(ctx, conn.WithLogQueries())
 	wrapper, _ := iwrapper.(*Wrapper)
 	require.NotNil(t, wrapper)
 	require.NotNil(t, wrapper.db)

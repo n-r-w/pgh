@@ -10,9 +10,9 @@ import (
 
 	"github.com/cenkalti/backoff/v5"
 	"github.com/n-r-w/bootstrap"
-	"github.com/n-r-w/pgh/v2"
+	"github.com/n-r-w/ctxlog"
 	"github.com/n-r-w/pgh/v2/px/db"
-	"github.com/n-r-w/pgh/v2/px/db/shared"
+	"github.com/n-r-w/pgh/v2/px/db/conn"
 	"github.com/n-r-w/pgh/v2/px/db/telemetry"
 	"github.com/n-r-w/pgh/v2/txmgr"
 	"github.com/samber/lo"
@@ -44,7 +44,7 @@ var DefaultShardFunc = func(_ context.Context, shardKey string) ShardID { //noli
 // ShardInfo information about a shard.
 type ShardInfo struct {
 	ShardID    ShardID
-	Connector  shared.IStartStopConnector
+	Connector  db.IStartStopConnector
 	TxBeginner txmgr.ITransactionBeginner
 	TxInformer txmgr.ITransactionInformer
 
@@ -80,7 +80,7 @@ type DB struct {
 	shardFunc     ShardFunc
 	shardInfo     []*ShardInfo // few shards, so map is not used
 	name          string
-	logger        pgh.ILogger
+	logger        ctxlog.ILogger
 	restartPolicy []backoff.RetryOption
 }
 
@@ -91,6 +91,7 @@ func New(shardInfo []*ShardInfo, shardFunc ShardFunc, opts ...Option) *DB {
 	s := &DB{
 		shardFunc: shardFunc,
 		shardInfo: shardInfo,
+		logger:    ctxlog.NewStubWrapper(),
 	}
 
 	for _, opt := range opts {
@@ -115,6 +116,7 @@ type DSNInfo struct {
 func NewFromDSN(dsn []DSNInfo, shardFunc ShardFunc, opts ...Option) *DB {
 	s := &DB{
 		shardFunc: shardFunc,
+		logger:    ctxlog.NewStubWrapper(),
 	}
 
 	for _, opt := range opts {
@@ -229,10 +231,10 @@ func (s *DB) getShardInfo(ctx context.Context, shardKey string) *ShardInfo {
 }
 
 // Connection returns IConnection interface implementation for the specified shardKey.
-func (s *DB) Connection(ctx context.Context, shardKey string, opt ...shared.ConnectionOption) shared.IConnection {
+func (s *DB) Connection(ctx context.Context, shardKey string, opt ...conn.ConnectionOption) conn.IConnection {
 	info := s.getShardInfo(ctx, shardKey)
 	if info == nil {
-		return shared.NewDatabaseErrorWrapper(fmt.Errorf("shard %s not found", shardKey))
+		return conn.NewDatabaseErrorWrapper(fmt.Errorf("shard %s not found", shardKey))
 	}
 
 	return info.Connector.Connection(ctx, opt...)
@@ -254,9 +256,7 @@ func (s *DB) Begin(ctx context.Context, shardKey string,
 func (s *DB) WithoutTransaction(ctx context.Context, shardKey string) context.Context {
 	info := s.getShardInfo(ctx, shardKey)
 	if info == nil {
-		if s.logger != nil {
-			s.logger.Errorf(ctx, "without transaction failed, shard not found, shardKey: %s", shardKey)
-		}
+		s.logger.Error(ctx, "without transaction failed", "reason", "shard not found", "shardKey", shardKey)
 		return ctx
 	}
 
@@ -268,7 +268,7 @@ func (s *DB) WithoutTransaction(ctx context.Context, shardKey string) context.Co
 // runParallel specifies the number of goroutines to use for parallel execution.
 // If runParallel is 0, the function will be executed in the sequential way.
 func (s *DB) RunFunc(ctx context.Context,
-	f func(ctx context.Context, shardID ShardID, con shared.IConnection) error,
+	f func(ctx context.Context, shardID ShardID, con conn.IConnection) error,
 	runParallel int,
 ) error {
 	var eg *errgroup.Group

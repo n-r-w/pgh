@@ -1,4 +1,4 @@
-package shared
+package conn
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"github.com/n-r-w/pgh/v2/txmgr"
 )
 
-//go:generate mockgen -source connection.go -destination connection_mock.go -package shared
+//go:generate mockgen -source connection.go -destination connection_mock.go -package conn
 
 // IConnection includes methods from pgxpool.Pool, pgx.Conn and pgx.Tx + methods for checking transaction state.
 type IConnection interface {
@@ -38,13 +38,6 @@ type IConnection interface {
 	TransactionOptions() txmgr.Options
 	// WithoutTransaction returns a context without a transaction.
 	WithoutTransaction(ctx context.Context) context.Context
-}
-
-// IStartStopConnector - interface for a service that creates IConnection and can be started and stopped.
-type IStartStopConnector interface {
-	Start(ctx context.Context) error
-	Stop(ctx context.Context) error
-	Connection(ctx context.Context, opt ...ConnectionOption) IConnection
 }
 
 // ConnectionOption options for Connection.

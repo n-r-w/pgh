@@ -4,7 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/n-r-w/pgh/v2/px/db/shared"
+	"github.com/n-r-w/pgh/v2/px/db"
+	"github.com/n-r-w/pgh/v2/px/db/conn"
 )
 
 // Attribute  span attribute.
@@ -33,12 +34,12 @@ type ITelemetry interface {
 
 // Service wrapper for working with DB and sending telemetry.
 type Service struct {
-	parent    shared.IStartStopConnector
+	parent    db.IStartStopConnector
 	telemetry ITelemetry
 }
 
 // New creates a new Service instance.
-func New(parent shared.IStartStopConnector, telemetry ITelemetry) *Service {
+func New(parent db.IStartStopConnector, telemetry ITelemetry) *Service {
 	return &Service{
 		parent:    parent,
 		telemetry: telemetry,
@@ -56,7 +57,7 @@ func (s *Service) Stop(ctx context.Context) error {
 }
 
 // Connection returns an implementation of the IConnection interface.
-func (s *Service) Connection(ctx context.Context, opt ...shared.ConnectionOption) shared.IConnection {
+func (s *Service) Connection(ctx context.Context, opt ...conn.ConnectionOption) conn.IConnection {
 	var span ISpan
 	ctx, span = s.telemetry.StartSpan(ctx, "connection")
 	defer span.End()

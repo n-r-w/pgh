@@ -2,7 +2,7 @@ package shard
 
 import (
 	"github.com/cenkalti/backoff/v5"
-	"github.com/n-r-w/pgh/v2"
+	"github.com/n-r-w/ctxlog"
 )
 
 // Option option for DB.
@@ -16,7 +16,7 @@ func WithName(name string) Option {
 }
 
 // WithLogger sets the logger.
-func WithLogger(logger pgh.ILogger) Option {
+func WithLogger(logger ctxlog.ILogger) Option {
 	return func(s *DB) {
 		s.logger = logger
 	}

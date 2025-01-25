@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/georgysavva/scany/v2/pgxscan"
+	"github.com/n-r-w/ctxlog"
+	"github.com/n-r-w/pgh/v2/px/db"
 	"github.com/n-r-w/testdock/v2"
 	"github.com/stretchr/testify/require"
 )
@@ -13,9 +15,15 @@ import (
 func TestShardDB(t *testing.T) {
 	t.Parallel()
 
-	var (
-		ctx, cancel = context.WithTimeout(context.Background(), time.Minute)
+	// put logger to context
+	ctx := ctxlog.ToTestContext(context.Background(), t)
+	// create a wrapper for ctxlog
+	logWrapper := ctxlog.NewWrapper()
 
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithTimeout(ctx, time.Minute)
+
+	var (
 		shard1 = ShardID(1)
 		shard2 = ShardID(2)
 
@@ -43,12 +51,18 @@ func TestShardDB(t *testing.T) {
 		{
 			ShardID: shard1,
 			DSN:     info1.DSN(),
+			Options: []db.Option{
+				db.WithLogPxDBQueries(),
+			},
 		},
 		{
 			ShardID: shard2,
 			DSN:     info2.DSN(),
+			Options: []db.Option{
+				db.WithLogPxDBQueries(),
+			},
 		},
-	}, shardFunc)
+	}, shardFunc, WithLogger(logWrapper))
 
 	require.Len(t, shardDB.GetShards(), 2)
 

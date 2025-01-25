@@ -7,7 +7,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/n-r-w/pgh/v2/px/db/shared"
+	"github.com/n-r-w/pgh/v2/px/db/conn"
 	"github.com/n-r-w/pgh/v2/txmgr"
 )
 
@@ -15,12 +15,12 @@ type telemetryHelperFunc func(ctx context.Context, command, details string, argu
 
 // ConnectionWrapper wrapper over iConnection with added telemetry and logs.
 type ConnectionWrapper struct {
-	con   shared.IConnection
+	con   conn.IConnection
 	tFunc telemetryHelperFunc
 }
 
 // NewWrapper creates a new instance of Wrapper.
-func newWrapper(con shared.IConnection, tFunc telemetryHelperFunc) *ConnectionWrapper {
+func newWrapper(con conn.IConnection, tFunc telemetryHelperFunc) *ConnectionWrapper {
 	return &ConnectionWrapper{
 		con:   con,
 		tFunc: tFunc,
