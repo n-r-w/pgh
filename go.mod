@@ -1,6 +1,6 @@
 module github.com/n-r-w/pgh/v2
 
-go 1.23
+go 1.23.2
 
 require (
 	github.com/cenkalti/backoff/v5 v5.0.1
