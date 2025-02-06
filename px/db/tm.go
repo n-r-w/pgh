@@ -12,14 +12,11 @@ import (
 
 // Implementation for TransactionManager
 
-// Begin runs a function within a transaction.
-func (p *PxDB) Begin(ctx context.Context, f func(ctxTr context.Context) error, opts txmgr.Options) (err error) {
-	var con *pgxpool.Conn
-	con, err = p.pool.Acquire(ctx)
+func (p *PxDB) beginTxHelper(ctx context.Context, opts txmgr.Options) (*pgxpool.Conn, pgx.Tx, error) {
+	con, err := p.pool.Acquire(ctx)
 	if err != nil {
-		return err
+		return nil, nil, fmt.Errorf("failed to acquire connection: %w", err)
 	}
-	defer con.Release()
 
 	var tx pgx.Tx
 	tx, err = con.BeginTx(ctx, pgx.TxOptions{
@@ -27,11 +24,23 @@ func (p *PxDB) Begin(ctx context.Context, f func(ctxTr context.Context) error, o
 		AccessMode: getPgxMode(opts.Mode),
 	})
 	if err != nil {
-		return fmt.Errorf("failed to begin transaction: %w", err)
+		return nil, nil, fmt.Errorf("failed to begin transaction: %w", err)
+	}
+
+	return con, tx, nil
+}
+
+// Begin runs a function within a transaction.
+func (p *PxDB) Begin(ctx context.Context, f func(ctxTr context.Context) error, opts txmgr.Options) (err error) {
+	con, tx, err := p.beginTxHelper(ctx, opts)
+	if err != nil {
+		return err
 	}
 
 	// If panic occurs, rollback the transaction.
 	defer func() {
+		defer con.Release()
+
 		if rec := recover(); rec != nil {
 			_ = tx.Rollback(ctx)
 			panic(rec) // Re-throw panic after rollback.
@@ -57,6 +66,21 @@ func (p *PxDB) Begin(ctx context.Context, f func(ctxTr context.Context) error, o
 	}
 
 	return tx.Commit(ctx)
+}
+
+func (p *PxDB) BeginTx(ctx context.Context, opts txmgr.Options) (context.Context, txmgr.ITransactionFinisher, error) {
+	con, tx, err := p.beginTxHelper(ctx, opts)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Create transaction object and put it in context
+	tCtx := newTransaction(p, tx, opts).toContext(ctx)
+
+	return tCtx, &transactionFinisher{
+		con: con,
+		tx:  tx,
+	}, nil
 }
 
 // InTransaction returns true if transaction is started.
@@ -165,4 +189,22 @@ func WithoutTransaction(ctx context.Context) context.Context {
 	}
 
 	return tx.removeFromContext(ctx)
+}
+
+// transactionFinisher implements txmgr.ITransactionFinisher.
+type transactionFinisher struct {
+	con *pgxpool.Conn
+	tx  pgx.Tx
+}
+
+// Commit commits the transaction.
+func (t *transactionFinisher) Commit(ctx context.Context) error {
+	defer t.con.Release()
+	return t.tx.Commit(ctx)
+}
+
+// Rollback rolls back the transaction.
+func (t *transactionFinisher) Rollback(ctx context.Context) error {
+	defer t.con.Release()
+	return t.tx.Rollback(ctx)
 }

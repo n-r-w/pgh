@@ -56,8 +56,7 @@ func New(tmBeginner ITransactionBeginner, tmImplementator ITransactionInformer) 
 	}
 }
 
-// Begin starts a new transaction and executes the function.
-func (tm *TransactionManager) Begin(ctx context.Context, f func(ctxTr context.Context) error, opts ...Option) error {
+func (tm *TransactionManager) prepareBegin(ctx context.Context, opts []Option) (*Options, error) {
 	// get options
 	tmOpts := &Options{
 		Level: TxLevelDefault,
@@ -72,18 +71,40 @@ func (tm *TransactionManager) Begin(ctx context.Context, f func(ctxTr context.Co
 
 		// we cannot change transaction level and mode
 		if cOpt.Level != tmOpts.Level {
-			return fmt.Errorf("transaction level mismatch: %d != %d", cOpt.Level, tmOpts.Level)
+			return nil, fmt.Errorf("transaction level mismatch: %d != %d", cOpt.Level, tmOpts.Level)
 		}
 		if cOpt.Mode != tmOpts.Mode {
-			return fmt.Errorf("transaction mode mismatch: %d != %d", cOpt.Mode, tmOpts.Mode)
+			return nil, fmt.Errorf("transaction mode mismatch: %d != %d", cOpt.Mode, tmOpts.Mode)
 		}
+	}
 
+	return tmOpts, nil
+}
+
+// Begin starts a new transaction and executes the function.
+func (tm *TransactionManager) Begin(ctx context.Context, f func(ctxTr context.Context) error, opts ...Option) error {
+	tmOpts, err := tm.prepareBegin(ctx, opts)
+	if err != nil {
+		return err
+	}
+
+	if tm.tmImplementator.InTransaction(ctx) { // transaction is already started
 		// just execute the function
 		return f(ctx)
 	}
 
 	// transaction is not started yet
 	return tm.tmBeginner.Begin(ctx, f, *tmOpts)
+}
+
+// BeginTx starts a new transaction.
+func (tm *TransactionManager) BeginTx(ctx context.Context, opts ...Option) (context.Context, ITransactionFinisher, error) {
+	tmOpts, err := tm.prepareBegin(ctx, opts)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return tm.tmBeginner.BeginTx(ctx, *tmOpts)
 }
 
 // WithoutTransaction returns context without transaction.

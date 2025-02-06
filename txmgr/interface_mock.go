@@ -67,6 +67,57 @@ func (mr *MockITransactionInformerMockRecorder) TransactionOptions(ctx any) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TransactionOptions", reflect.TypeOf((*MockITransactionInformer)(nil).TransactionOptions), ctx)
 }
 
+// MockITransactionFinisher is a mock of ITransactionFinisher interface.
+type MockITransactionFinisher struct {
+	ctrl     *gomock.Controller
+	recorder *MockITransactionFinisherMockRecorder
+}
+
+// MockITransactionFinisherMockRecorder is the mock recorder for MockITransactionFinisher.
+type MockITransactionFinisherMockRecorder struct {
+	mock *MockITransactionFinisher
+}
+
+// NewMockITransactionFinisher creates a new mock instance.
+func NewMockITransactionFinisher(ctrl *gomock.Controller) *MockITransactionFinisher {
+	mock := &MockITransactionFinisher{ctrl: ctrl}
+	mock.recorder = &MockITransactionFinisherMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockITransactionFinisher) EXPECT() *MockITransactionFinisherMockRecorder {
+	return m.recorder
+}
+
+// Commit mocks base method.
+func (m *MockITransactionFinisher) Commit(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Commit", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Commit indicates an expected call of Commit.
+func (mr *MockITransactionFinisherMockRecorder) Commit(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Commit", reflect.TypeOf((*MockITransactionFinisher)(nil).Commit), ctx)
+}
+
+// Rollback mocks base method.
+func (m *MockITransactionFinisher) Rollback(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Rollback", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Rollback indicates an expected call of Rollback.
+func (mr *MockITransactionFinisherMockRecorder) Rollback(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Rollback", reflect.TypeOf((*MockITransactionFinisher)(nil).Rollback), ctx)
+}
+
 // MockITransactionBeginner is a mock of ITransactionBeginner interface.
 type MockITransactionBeginner struct {
 	ctrl     *gomock.Controller
@@ -102,6 +153,22 @@ func (m *MockITransactionBeginner) Begin(ctx context.Context, f func(context.Con
 func (mr *MockITransactionBeginnerMockRecorder) Begin(ctx, f, opts any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Begin", reflect.TypeOf((*MockITransactionBeginner)(nil).Begin), ctx, f, opts)
+}
+
+// BeginTx mocks base method.
+func (m *MockITransactionBeginner) BeginTx(ctx context.Context, opts Options) (context.Context, ITransactionFinisher, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BeginTx", ctx, opts)
+	ret0, _ := ret[0].(context.Context)
+	ret1, _ := ret[1].(ITransactionFinisher)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// BeginTx indicates an expected call of BeginTx.
+func (mr *MockITransactionBeginnerMockRecorder) BeginTx(ctx, opts any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BeginTx", reflect.TypeOf((*MockITransactionBeginner)(nil).BeginTx), ctx, opts)
 }
 
 // WithoutTransaction mocks base method.
@@ -158,6 +225,27 @@ func (mr *MockITransactionManagerMockRecorder) Begin(ctx, f any, opts ...any) *g
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx, f}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Begin", reflect.TypeOf((*MockITransactionManager)(nil).Begin), varargs...)
+}
+
+// BeginTx mocks base method.
+func (m *MockITransactionManager) BeginTx(ctx context.Context, opts ...Option) (context.Context, ITransactionFinisher, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "BeginTx", varargs...)
+	ret0, _ := ret[0].(context.Context)
+	ret1, _ := ret[1].(ITransactionFinisher)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// BeginTx indicates an expected call of BeginTx.
+func (mr *MockITransactionManagerMockRecorder) BeginTx(ctx any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BeginTx", reflect.TypeOf((*MockITransactionManager)(nil).BeginTx), varargs...)
 }
 
 // WithoutTransaction mocks base method.
