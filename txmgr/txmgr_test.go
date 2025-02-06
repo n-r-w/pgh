@@ -30,7 +30,7 @@ func TestTransactionManager_Begin(t *testing.T) {
 		Return(nil)
 
 	tmInformer := NewMockITransactionInformer(mc)
-	tmInformer.EXPECT().InTransaction(gomock.Any()).Return(false)
+	tmInformer.EXPECT().InTransaction(gomock.Any()).Return(false).Times(2)
 
 	tm := New(tmBeginner, tmInformer)
 
@@ -53,7 +53,7 @@ func TestTransactionManager_Begin_InTransaction(t *testing.T) {
 	tmBeginner.EXPECT().Begin(gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
 
 	tmInformer := NewMockITransactionInformer(mc)
-	tmInformer.EXPECT().InTransaction(gomock.Any()).Return(true).Times(3)
+	tmInformer.EXPECT().InTransaction(gomock.Any()).Return(true).Times(4)
 	tmInformer.EXPECT().TransactionOptions(gomock.Any()).Return(Options{}).Times(3)
 
 	tm := New(tmBeginner, tmInformer)
