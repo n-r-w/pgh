@@ -98,10 +98,16 @@ func (tm *TransactionManager) Begin(ctx context.Context, f func(ctxTr context.Co
 }
 
 // BeginTx starts a new transaction.
-func (tm *TransactionManager) BeginTx(ctx context.Context, opts ...Option) (context.Context, ITransactionFinisher, error) {
+func (tm *TransactionManager) BeginTx(
+	ctx context.Context, opts ...Option,
+) (context.Context, ITransactionFinisher, error) {
 	tmOpts, err := tm.prepareBegin(ctx, opts)
 	if err != nil {
 		return nil, nil, err
+	}
+
+	if tm.tmImplementator.InTransaction(ctx) { // transaction is already started
+		return ctx, &noopTransactionFinisher{}, nil
 	}
 
 	return tm.tmBeginner.BeginTx(ctx, *tmOpts)
@@ -110,4 +116,14 @@ func (tm *TransactionManager) BeginTx(ctx context.Context, opts ...Option) (cont
 // WithoutTransaction returns context without transaction.
 func (tm *TransactionManager) WithoutTransaction(ctx context.Context) context.Context {
 	return tm.tmBeginner.WithoutTransaction(ctx)
+}
+
+type noopTransactionFinisher struct{}
+
+func (n *noopTransactionFinisher) Commit(_ context.Context) error {
+	return nil
+}
+
+func (n *noopTransactionFinisher) Rollback(_ context.Context) error {
+	return nil
 }
