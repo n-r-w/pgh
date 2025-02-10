@@ -8,7 +8,7 @@ require (
 	github.com/jackc/pgerrcode v0.0.0-20240316143900-6e2875d9b438
 	github.com/jackc/pgx/v5 v5.7.2
 	github.com/n-r-w/bootstrap v1.0.1
-	github.com/n-r-w/ctxlog v1.0.1
+	github.com/n-r-w/ctxlog v1.0.3
 	github.com/n-r-w/squirrel v1.4.2
 	github.com/stretchr/testify v1.10.0
 	go.opentelemetry.io/otel/trace v1.30.0
