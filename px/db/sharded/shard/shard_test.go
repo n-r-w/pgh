@@ -52,14 +52,14 @@ func TestShardDB(t *testing.T) {
 			ShardID: shard1,
 			DSN:     info1.DSN(),
 			Options: []db.Option{
-				db.WithLogPxDBQueries(),
+				db.WithLogQueries(),
 			},
 		},
 		{
 			ShardID: shard2,
 			DSN:     info2.DSN(),
 			Options: []db.Option{
-				db.WithLogPxDBQueries(),
+				db.WithLogQueries(),
 			},
 		},
 	}, shardFunc, WithLogger(logWrapper))

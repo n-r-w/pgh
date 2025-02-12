@@ -27,7 +27,7 @@ import (
 db := db.New(
     db.WithName("mydb"),
     db.WithDSN("postgres://user:password@localhost:5432/dbname"),
-    db.WithLogPxDBQueries(), // Enable query logging
+    db.WithLogQueries(), // Enable query logging
 )
 
 // Start the service
@@ -45,7 +45,7 @@ The `db.New()` function accepts various options to configure the database connec
 - `WithDSN(dsn string)` - Sets connection string
 - `WithPool(pool *pgxpool.Pool)` - Sets existing connection pool
 - `WithConfig(cfg *pgxpool.Config)` - Sets pool configuration
-- `WithLogPxDBQueries()` - Enables query logging
+- `WithLogQueries()` - Enables query logging
 - `WithRestartPolicy(policy github.com/cenkalti/backoff/v5)` - Sets restart policy on errors. Only works when using <https://github.com/n-r-w/bootstrap>
 - `WithAfterStartFunc(f func(context.Context, *PxDB) error)` - Sets function to run after successful start
 - `WithLogger(logger ctxlog.ILogger)` - Sets custom logger implementation

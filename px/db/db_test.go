@@ -24,7 +24,7 @@ func TestPxDB(t *testing.T) {
 	pgdbImpl := New(
 		WithName("test"),
 		WithDSN(informer.DSN()),
-		WithLogPxDBQueries(),
+		WithLogQueries(),
 	)
 
 	require.Equal(t, "test", pgdbImpl.name)

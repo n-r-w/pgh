@@ -120,7 +120,31 @@ func (i *Wrapper) QueryRow(ctx context.Context, sql string, args ...any) (row pg
 
 // SendBatch sends a set of queries for execution, combining all queries into one package.
 func (i *Wrapper) SendBatch(ctx context.Context, b *pgx.Batch) (res pgx.BatchResults) {
-	i.logQueryHelper(ctx, fmt.Sprintf("SendBatch(%d)", b.Len()), "", nil, func() error {
+	const batchSizeLogLimit = 10
+	var queries strings.Builder
+
+	if i.logQueries {
+		queries.Grow(batchSizeLogLimit)
+		for i, q := range b.QueuedQueries {
+			if i > batchSizeLogLimit {
+				_, _ = queries.WriteString("...")
+				break
+			}
+			// [SELECT * FROM users WHERE id IN ($1,$2); ARGS: 2,3]
+			_, _ = queries.WriteString("[")
+			_, _ = queries.WriteString(q.SQL)
+			_, _ = queries.WriteString("; ARGS: ")
+			for j, arg := range q.Arguments {
+				if j > 0 {
+					_, _ = queries.WriteString(",")
+				}
+				_, _ = queries.WriteString(fmt.Sprintf("%v", arg))
+			}
+			_, _ = queries.WriteString("]")
+		}
+	}
+
+	i.logQueryHelper(ctx, queries.String(), "", nil, func() error {
 		if i.tx != nil {
 			res = i.tx.SendBatch(ctx, b)
 		} else {

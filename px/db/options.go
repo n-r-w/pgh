@@ -48,8 +48,8 @@ func WithConfig(cfg *pgxpool.Config) Option {
 	}
 }
 
-// WithLogPxDBQueries enables query logging at the PxDB service level.
-func WithLogPxDBQueries() Option {
+// WithLogQueries enables query logging at the PxDB service level.
+func WithLogQueries() Option {
 	return func(p *PxDB) {
 		p.logQueries = true
 	}
