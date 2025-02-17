@@ -84,7 +84,7 @@ require (
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
 	github.com/n-r-w/testdock/v2 v2.1.1-0.20250125230910-b5560e69f0ff
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/samber/lo v1.47.0
+	github.com/samber/lo v1.49.1
 	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/exp v0.0.0-20240325151524-a685a6edb6d8 // indirect
 	golang.org/x/sync v0.11.0
