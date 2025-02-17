@@ -82,7 +82,7 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
-	github.com/n-r-w/testdock/v2 v2.1.1-0.20250125230910-b5560e69f0ff
+	github.com/n-r-w/testdock/v2 v2.2.0
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/samber/lo v1.47.0
 	golang.org/x/crypto v0.31.0 // indirect
