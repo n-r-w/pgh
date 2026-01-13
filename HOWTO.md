@@ -7,6 +7,8 @@ This guide covers key usage patterns for:
 - `github.com/n-r-w/pgh/v2` - Query builder wrapper
 - `github.com/n-r-w/pgh/v2/px` - Query execution helpers
 - `github.com/n-r-w/squirrel` - SQL query builder
+- `github.com/n-r-w/pgh/v2/px/db` - Database connection management
+- `github.com/n-r-w/pgh/v2/txmgr` - Transaction management
 
 ## 1. Basic Query Operations
 
@@ -92,7 +94,7 @@ values := make([]pgh.Args, 0, len(users))
 for _, u := range users {
     values = append(values, pgh.Args{u.Name, u.Email})
 }
-rowsAffected, err := px.InsertSplit(ctx, db, baseQuery, values, 100)
+rowsAffected, err = px.InsertSplit(ctx, db, baseQuery, values, 100)
 ```
 
 ### Error Handling
@@ -123,11 +125,6 @@ The `px` package provides low-level transaction helpers for direct pgx usage.
 Full control over transaction options:
 
 ```go
-import (
-    "github.com/jackc/pgx/v5"
-    "github.com/n-r-w/pgh/v2/px"
-)
-
 err := px.BeginTxFunc(ctx, pool, pgx.TxOptions{
     IsoLevel:   pgx.ReadCommitted,
     AccessMode: pgx.ReadWrite,
@@ -137,14 +134,12 @@ err := px.BeginTxFunc(ctx, pool, pgx.TxOptions{
     if err != nil {
         return err // Transaction will be rolled back
     }
-    
     // Or use px helpers with tx
     query := pgh.Builder().Update("users").Set("active", true).Where("id = ?", 1)
     _, err = px.Exec(ctx, tx, query)
     if err != nil {
         return err // Transaction will be rolled back
     }
-    
     return nil // Transaction will be committed
 })
 ```
@@ -188,7 +183,7 @@ This pattern isolates transaction management (application/usecase layer) from da
                      ▼
 ┌─────────────────────────────────────────┐
 │  Repository Layer                       │
-│  - Uses db.Connection(ctx)              │
+│  - Uses pxDB.Connection(ctx)            │
 │  - Unaware of transaction boundaries    │
 │  - Executes queries via conn.IConnection│
 └─────────────────────────────────────────┘
@@ -197,11 +192,6 @@ This pattern isolates transaction management (application/usecase layer) from da
 ### Setup
 
 ```go
-import (
-    "github.com/n-r-w/pgh/v2/px/db"
-    "github.com/n-r-w/pgh/v2/txmgr"
-)
-
 // Create PxDB instance
 pxDB := db.New(
     db.WithDSN("postgres://user:password@localhost:5432/dbname"),
@@ -247,13 +237,6 @@ func (u *OrderUsecase) CreateOrder(ctx context.Context, order Order) error {
 ### Repository Layer
 
 ```go
-import (
-    "github.com/n-r-w/pgh/v2"
-    "github.com/n-r-w/pgh/v2/px"
-    "github.com/n-r-w/pgh/v2/px/db"
-    "github.com/n-r-w/pgh/v2/px/db/conn"
-)
-
 type OrderRepositoryImpl struct {
     db *db.PxDB
 }
