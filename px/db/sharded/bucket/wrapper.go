@@ -39,13 +39,13 @@ func (b *bucketWrapper) WithoutTransaction(ctx context.Context) context.Context 
 
 // Exec executes a query without returning data.
 func (b *bucketWrapper) Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error) {
-	ctx = BucketToContext(ctx, b.bucketID)
+	ctx = ToContext(ctx, b.bucketID)
 	return b.db.Exec(ctx, PrepareBucketSQL(sql, b.bucketID), arguments...)
 }
 
 // Query executes a query and returns the result.
 func (b *bucketWrapper) Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error) {
-	ctx = BucketToContext(ctx, b.bucketID)
+	ctx = ToContext(ctx, b.bucketID)
 	return b.db.Query(ctx, PrepareBucketSQL(sql, b.bucketID), args...)
 }
 
@@ -54,7 +54,7 @@ func (b *bucketWrapper) Query(ctx context.Context, sql string, args ...any) (pgx
 // pgx.Row.Scan will return pgx.ErrNoRows.
 // Otherwise, pgx.Row.Scan scans the first selected row and discards the rest.
 func (b *bucketWrapper) QueryRow(ctx context.Context, sql string, args ...any) pgx.Row {
-	ctx = BucketToContext(ctx, b.bucketID)
+	ctx = ToContext(ctx, b.bucketID)
 	return b.db.QueryRow(ctx, PrepareBucketSQL(sql, b.bucketID), args...)
 }
 
@@ -63,7 +63,7 @@ func (b *bucketWrapper) QueryRow(ctx context.Context, sql string, args ...any) p
 // Then add queries to Batch using buckets.Batch.Queue function, after which call
 // buckets.Batch.PgxBatch() function.
 func (b *bucketWrapper) SendBatch(ctx context.Context, batch *pgx.Batch) pgx.BatchResults {
-	ctx = BucketToContext(ctx, b.bucketID)
+	ctx = ToContext(ctx, b.bucketID)
 	return b.db.SendBatch(ctx, batch)
 }
 
@@ -78,6 +78,6 @@ func (b *bucketWrapper) LargeObjects() pgx.LargeObjects {
 func (b *bucketWrapper) CopyFrom(ctx context.Context, tableName pgx.Identifier,
 	columnNames []string, rowSrc pgx.CopyFromSource,
 ) (n int64, err error) {
-	ctx = BucketToContext(ctx, b.bucketID)
+	ctx = ToContext(ctx, b.bucketID)
 	return b.db.CopyFrom(ctx, tableName, columnNames, rowSrc)
 }

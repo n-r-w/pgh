@@ -1,3 +1,4 @@
+// Package bucket provides functionality for working with database buckets.
 package bucket
 
 import (
@@ -33,19 +34,19 @@ func PrepareBucketSQL(sql string, bucketID BucketID) string {
 	return strings.ReplaceAll(sql, BucketAlias, BucketPrefix+bucketID.String())
 }
 
-// BucketToContext puts BucketID into context.
-func BucketToContext(ctx context.Context, bucketID BucketID) context.Context {
+// ToContext puts BucketID into context.
+func ToContext(ctx context.Context, bucketID BucketID) context.Context {
 	return context.WithValue(ctx, bucketContextKey, bucketID)
 }
 
-// BucketFromContext extracts BucketID from context.
-func BucketFromContext(ctx context.Context) (BucketID, bool) {
+// FromContext extracts BucketID from context.
+func FromContext(ctx context.Context) (BucketID, bool) {
 	bucketID, ok := ctx.Value(bucketContextKey).(BucketID)
 	return bucketID, ok
 }
 
 // BucketID bucket identifier.
-type BucketID uint
+type BucketID uint //nolint:revive // used as is
 
 // String converts BucketID to string.
 func (b BucketID) String() string {
@@ -58,7 +59,7 @@ func (b BucketID) Schema() string {
 }
 
 // BucketRange range of buckets.
-type BucketRange struct {
+type BucketRange struct { //nolint:revive // used as is
 	FromID BucketID
 	ToID   BucketID
 }
@@ -95,13 +96,13 @@ func UniformBucketFn(n int) func(shardKey string) BucketID {
 }
 
 // BucketInfo information about a bucket.
-type BucketInfo struct {
+type BucketInfo struct { //nolint:revive // used as is
 	ShardID     shard.ShardID
 	BucketRange *BucketRange
 }
 
 // BucketCount number of buckets.
-func BucketCount(buckets []*BucketInfo) int {
+func BucketCount(buckets []*BucketInfo) int { //nolint:revive // used as is
 	count := 0
 	for _, bucket := range buckets {
 		count += bucket.BucketRange.Count()
@@ -134,8 +135,10 @@ func New[T any](shardDB *shard.DB, buckets []*BucketInfo,
 	const defaultRunBucketFuncLimit = 10
 
 	b := &DB[T]{
+		name:                   "bucket_db",
 		shardDB:                shardDB,
 		shardKeyToBucketIDFunc: shardKeyToBucketIDFunc,
+		afterStartFunc:         nil,
 		buckets:                buckets,
 		infoByShard:            make(map[shard.ShardID]*BucketInfo, len(buckets)),
 		shardByBucketID:        make(map[BucketID]shard.ShardID),
@@ -225,8 +228,8 @@ func (b *DB[T]) ShardConnection(ctx context.Context, shardID shard.ShardID,
 }
 
 // NewBatch creates a new Batch based on the key.
-func (b *DB[T]) NewBatch(bucketID BucketID) *BucketBatch {
-	return NewBucketBatch(bucketID)
+func (b *DB[T]) NewBatch(bucketID BucketID) *Batch {
+	return NewBatch(bucketID)
 }
 
 // Exec executes a query without returning data.
@@ -284,7 +287,17 @@ func NewBucketClusterFromDSN(dsn []shard.DSNInfo, bucketInfo []*BucketInfo,
 	shardOpts []shard.Option,
 	bucketOpts []Option[string],
 ) *DB[string] {
-	tempDB := &DB[string]{}
+	tempDB := &DB[string]{
+		shardDB:                nil,
+		shardKeyToBucketIDFunc: nil,
+		buckets:                nil,
+		infoByShard:            nil,
+		shardByBucketID:        nil,
+		name:                   "",
+		runBucketFuncLimit:     0,
+		logger:                 nil,
+		afterStartFunc:         nil,
+	}
 	for _, o := range bucketOpts {
 		o(tempDB)
 	}

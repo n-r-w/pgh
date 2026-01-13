@@ -43,7 +43,7 @@ func (b *DB[T]) initClusterHelper(
 		for bucketID := bucket.BucketRange.FromID; bucketID <= bucket.BucketRange.ToID; bucketID++ {
 			if err := b.shardDB.GetTxManager(shardID).Begin(ctx, func(ctxTr context.Context) error {
 				// Create schema for the bucket
-				_, errFunc := con.Exec(ctxTr, fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS %s", bucketID.Schema()))
+				_, errFunc := con.Exec(ctxTr, "CREATE SCHEMA IF NOT EXISTS "+bucketID.Schema())
 				if errFunc != nil {
 					return fmt.Errorf("failed to create schema for bucket %d, shard %d: %w", bucketID, shardID, errFunc)
 				}
