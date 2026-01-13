@@ -1,3 +1,4 @@
+// Package conn provides database connection management functionality.
 package conn
 
 import (

@@ -20,6 +20,8 @@ import (
 )
 
 // ShardID shard identifier.
+//
+//nolint:revive // exported type ShardID is acceptable despite stuttering
 type ShardID uint
 
 // String converts ShardID to string.
@@ -28,6 +30,8 @@ func (s ShardID) String() string {
 }
 
 // ShardFunc function to get shard by key.
+//
+//nolint:revive // exported type ShardFunc is acceptable despite stuttering
 type ShardFunc func(ctx context.Context, shardKey string) ShardID
 
 // DefaultShardFunc default function for determining shard number by shardKey.
@@ -42,6 +46,8 @@ var DefaultShardFunc = func(_ context.Context, shardKey string) ShardID { //noli
 }
 
 // ShardInfo information about a shard.
+//
+//nolint:revive // exported type ShardInfo is acceptable despite stuttering
 type ShardInfo struct {
 	ShardID    ShardID
 	Connector  db.IStartStopConnector
@@ -52,7 +58,7 @@ type ShardInfo struct {
 }
 
 // NewInfoPxDB helper function, that creates shard information based on db.PxDB.
-// telemetry is optional.
+// NewInfoPxDB creates a new ShardInfo from PxDB. telemetry is optional.
 func NewInfoPxDB(
 	shardID ShardID,
 	pgdb *db.PxDB,
@@ -60,8 +66,10 @@ func NewInfoPxDB(
 ) *ShardInfo {
 	i := &ShardInfo{
 		ShardID:    shardID,
+		Connector:  pgdb,
 		TxBeginner: pgdb,
 		TxInformer: pgdb,
+		txManager:  nil,
 	}
 
 	if t != nil {
@@ -89,9 +97,11 @@ var _ bootstrap.IService = (*DB)(nil)
 // New creates a sharded database.
 func New(shardInfo []*ShardInfo, shardFunc ShardFunc, opts ...Option) *DB {
 	s := &DB{
-		shardFunc: shardFunc,
-		shardInfo: shardInfo,
-		logger:    ctxlog.NewStubWrapper(),
+		shardFunc:     shardFunc,
+		shardInfo:     shardInfo,
+		name:          "",
+		logger:        ctxlog.NewStubWrapper(),
+		restartPolicy: nil,
 	}
 
 	for _, opt := range opts {
@@ -115,8 +125,11 @@ type DSNInfo struct {
 // NewFromDSN creates a sharded database by creating PxDB based on DSN.
 func NewFromDSN(dsn []DSNInfo, shardFunc ShardFunc, opts ...Option) *DB {
 	s := &DB{
-		shardFunc: shardFunc,
-		logger:    ctxlog.NewStubWrapper(),
+		shardFunc:     shardFunc,
+		shardInfo:     nil,
+		name:          "",
+		logger:        ctxlog.NewStubWrapper(),
+		restartPolicy: nil,
 	}
 
 	for _, opt := range opts {
@@ -139,6 +152,7 @@ func NewFromDSN(dsn []DSNInfo, shardFunc ShardFunc, opts ...Option) *DB {
 			Connector:  pgdb,
 			TxBeginner: pgdb,
 			TxInformer: pgdb,
+			txManager:  nil,
 		})
 	}
 

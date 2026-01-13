@@ -1,4 +1,5 @@
-// Package filter ...
+// Package filter provides SQL filtering and pagination functionality.
+//
 // Deprecated: use github.com/n-r-w/squirrel
 package filter
 
@@ -11,32 +12,32 @@ import (
 
 type option func(f *filter)
 
-// WithPKField specifies the name for PK. Used in cases where PK name differs from default "id".
-// Can specify a composite key in the format: (field1, field2)
-func WithPKField(pkfield string) option {
+// WithPKField specifies the name for PK. Used in cases where PK name differs
+// from default "id". Can specify a composite key in the format: (field1, field2).
+func WithPKField(pkfield string) option { //nolint:revive,lll //unexported-return is intentional for functional options pattern
 	return func(f *filter) {
 		f.pkField = pkfield
 	}
 }
 
-// WithIn adds an IN condition for sqlName with values
-func WithIn[T any](sqlName string, values []T) option {
+// WithIn adds an IN condition for sqlName with values.
+func WithIn[T any](sqlName string, values []T) option { //nolint:revive //unexported-return is intentional
 	return func(f *filter) {
 		f.inConds = append(f.inConds, *NewInCond(sqlName, values))
 	}
 }
 
-// WithInConds adds IN conditions. Useful in cases where you need to customize the created InCond condition
-func WithInConds(conds ...inCond) option {
+// WithInConds adds IN conditions. Useful in cases where you need to customize
+// the created InCond condition.
+func WithInConds(conds ...inCond) option { //nolint:revive //unexported-return is intentional
 	return func(f *filter) {
 		f.inConds = append(f.inConds, conds...)
 	}
 }
 
-// WithOrders adds sorting conditions (orders).
-// Aliases for mapping orderID from OrderCond and sqlName are passed in aliases parameter.
-// Duplicate sort conditions are ignored
-func WithOrders(aliases map[int]string, orders ...OrderCond) option {
+// WithOrders adds sorting conditions (orders). Aliases for mapping orderID from
+// OrderCond and sqlName are passed in aliases parameter. Duplicate sort conditions are ignored.
+func WithOrders(aliases map[int]string, orders ...OrderCond) option { //nolint:revive,lll //unexported-return is intentional
 	return func(f *filter) {
 		f.orderAliases = aliases
 		for _, oc := range orders {
@@ -51,26 +52,26 @@ func WithOrders(aliases map[int]string, orders ...OrderCond) option {
 	}
 }
 
-// WithoutOrder forcibly disables sorting
-func WithoutOrder() option {
+// WithoutOrder forcibly disables sorting.
+func WithoutOrder() option { //nolint:revive //unexported-return is intentional for functional options pattern
 	return func(f *filter) {
 		f.withoutOrder = true
 	}
 }
 
-// WithSearch adds search condition for all provided fields
-func WithSearch(search string, fields ...string) option {
+// WithSearch adds search condition for all provided fields.
+func WithSearch(search string, fields ...string) option { //nolint:revive //unexported-return is intentional
 	return func(f *filter) {
 		f.search = search
 		f.searchFields = fields
 	}
 }
 
-// WithPaginator adds pagination based on Paginator.
-// If a service paginator is provided, pagination will be performed by the last PK value with condition pkField > lastID
+// WithPaginator adds pagination based on Paginator. If a service paginator is
+// provided, pagination will be performed by the last PK value with condition pkField > lastID.
 // If a frontend paginator is provided, pagination will be performed by limit and offset.
-// Panics when attempting to add paginator again
-func WithPaginator(paginator Paginator) option {
+// Panics when attempting to add paginator again.
+func WithPaginator(paginator Paginator) option { //nolint:revive //unexported-return is intentional
 	return func(f *filter) {
 		if !f.paginator.isEmpty() {
 			panic("attempt to re-add paginator")
@@ -97,7 +98,14 @@ type filter struct {
 
 func newFilter(opts ...option) (*filter, error) {
 	f := &filter{
-		pkField: "id",
+		pkField:      "id",
+		inConds:      nil,
+		orders:       nil,
+		orderAliases: nil,
+		withoutOrder: false,
+		search:       "",
+		searchFields: nil,
+		paginator:    Paginator{limit: 0, offset: 0, lastID: nil, paginatorType: emptyPaginatorType},
 	}
 
 	for _, o := range opts {
@@ -118,8 +126,9 @@ func validateFilter(f *filter) error {
 	return nil
 }
 
-// NewSelectBuilder returns squirrel SelectBuilder built from provided opts
-// Deprecated: use github.com/n-r-w/squirrel
+// NewSelectBuilder returns squirrel SelectBuilder built from provided opts.
+//
+// Deprecated: use github.com/n-r-w/squirrel.
 func NewSelectBuilder(opts ...option) (sq.SelectBuilder, error) {
 	f, err := newFilter(opts...)
 	if err != nil {

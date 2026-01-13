@@ -1,3 +1,4 @@
+// Package pgh provides helper functions for building SQL queries.
 package pgh
 
 import (
@@ -8,7 +9,7 @@ import (
 // Used to explicitly separate query parameters from other arguments.
 type Args []any
 
-// Builder creates a new instance of squirrel.StatementBuilderType for building queries
+// Builder creates a new instance of squirrel.StatementBuilderType for building queries.
 func Builder() sq.StatementBuilderType {
 	return sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 }

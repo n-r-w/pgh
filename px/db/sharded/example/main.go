@@ -28,10 +28,12 @@ func main() {
 			{
 				ShardID: shard1,
 				DSN:     "postgres://postgres:password1@localhost:5432/shard1", // Example DSN
+				Options: nil,
 			},
 			{
 				ShardID: shard2,
 				DSN:     "postgres://postgres:password@localhost:5432/shard2", // Example DSN
+				Options: nil,
 			},
 		},
 		[]*bucket.BucketInfo{

@@ -1,3 +1,4 @@
+// Package db provides database connection and transaction management.
 package db
 
 import (
@@ -32,8 +33,14 @@ var _ bootstrap.IService = (*PxDB)(nil)
 // New creates a new instance of PxDB.
 func New(opt ...Option) *PxDB {
 	p := &PxDB{
-		name:   "pgdb",
-		logger: ctxlog.NewStubWrapper(),
+		name:           "pgdb",
+		logger:         ctxlog.NewStubWrapper(),
+		restartPolicy:  nil,
+		dsn:            "",
+		logQueries:     false,
+		afterStartFunc: nil,
+		config:         nil,
+		pool:           nil,
 	}
 
 	for _, o := range opt {
@@ -100,7 +107,7 @@ func (p *PxDB) Info() bootstrap.Info {
 // Connection extracts transaction/pool from context and returns database interface implementation.
 // Use only at repository level. Returns IConnection interface implementation.
 func (p *PxDB) Connection(ctx context.Context, opt ...conn.ConnectionOption) conn.IConnection {
-	opts := &conn.ConnectionOptionData{}
+	opts := &conn.ConnectionOptionData{LogQueries: false}
 	for _, o := range opt {
 		o(opts)
 	}

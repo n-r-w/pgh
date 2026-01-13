@@ -63,5 +63,6 @@ func BeginFunc(ctx context.Context,
 	conn ITransactionBeginner,
 	f func(ctx context.Context, tx pgx.Tx) error,
 ) error {
+	//nolint:exhaustruct // external type, zero values are acceptable defaults
 	return BeginTxFunc(ctx, conn, pgx.TxOptions{}, f)
 }

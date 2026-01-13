@@ -1,3 +1,4 @@
+// Package examples provides example usage of the pgh library.
 package examples
 
 import (
@@ -10,6 +11,7 @@ import (
 	sq "github.com/n-r-w/squirrel"
 )
 
+// User represents a user in the system.
 type User struct {
 	ID        int    `db:"id"`
 	Name      string `db:"name"`
@@ -19,6 +21,7 @@ type User struct {
 	LastLogin string `db:"last_login"`
 }
 
+// ExampleSelectOne demonstrates selecting a single user by ID.
 func ExampleSelectOne(ctx context.Context, db px.IQuerier, userID int) (*User, error) {
 	query := pgh.Builder().
 		Select("*").
@@ -33,7 +36,8 @@ func ExampleSelectOne(ctx context.Context, db px.IQuerier, userID int) (*User, e
 	return &user, nil
 }
 
-func ExampleSelectMany(ctx context.Context, db px.IQuerier, userID int) ([]User, error) {
+// ExampleSelectMany demonstrates selecting multiple users.
+func ExampleSelectMany(ctx context.Context, db px.IQuerier, _ int) ([]User, error) {
 	query := pgh.Builder().
 		Select("*").
 		From("users")
@@ -46,6 +50,7 @@ func ExampleSelectMany(ctx context.Context, db px.IQuerier, userID int) ([]User,
 	return users, nil
 }
 
+// ExampleExec demonstrates executing a modification query.
 func ExampleExec(ctx context.Context, tx px.IQuerier, user *User) error {
 	query := pgh.Builder().
 		Update("users").
@@ -59,7 +64,7 @@ func ExampleExec(ctx context.Context, tx px.IQuerier, user *User) error {
 	return err
 }
 
-// ExampleBatchOperations demonstrates batch operations
+// ExampleBatchOperations demonstrates batch operations.
 func ExampleBatchOperations(ctx context.Context, db px.IBatcher, users []User) error {
 	queries := make([]sq.Sqlizer, 0, len(users))
 
@@ -77,29 +82,33 @@ func ExampleBatchOperations(ctx context.Context, db px.IBatcher, users []User) e
 	return err
 }
 
-// ExampleErrorHandling demonstrates error handling
+// ExampleErrorHandling demonstrates error handling.
 func ExampleErrorHandling(err error) {
 	if err != nil {
 		switch {
 		case px.IsNoRows(err):
 			// Handle no rows found
 			// Handles both pgx.ErrNoRows and PostgreSQL 'no_data_found' error code
+			//nolint:forbidigo // example code
 			fmt.Println("No rows found")
 		case px.IsUniqueViolation(err):
 			// Handle unique constraint violation
 			// Maps to PostgreSQL error code '23505'
+			//nolint:forbidigo // example code
 			fmt.Println("Unique constraint violation")
 		case px.IsForeignKeyViolation(err):
 			// Handle foreign key violation
 			// Maps to PostgreSQL error code '23503'
+			//nolint:forbidigo // example code
 			fmt.Println("Foreign key violation")
 		default:
+			//nolint:forbidigo // example code
 			fmt.Printf("Unknown error: %v\n", err)
 		}
 	}
 }
 
-// ExampleSelectFunc demonstrates using SelectFunc to process rows one at a time
+// ExampleSelectFunc demonstrates using SelectFunc to process rows one at a time.
 func ExampleSelectFunc(ctx context.Context, db px.IQuerier) error {
 	query := pgh.Builder().
 		Select("id, name, email, status, bio, last_login").
@@ -120,12 +129,16 @@ func ExampleSelectFunc(ctx context.Context, db px.IQuerier) error {
 			return fmt.Errorf("scan user: %w", err)
 		}
 		// Process each user here
+		//nolint:forbidigo // example code
 		fmt.Printf("Processing user: %s\n", user.Name)
 		return nil
 	})
 }
 
-// ExampleExecSplit demonstrates splitting large updates into smaller batches
+// ExampleExecSplit demonstrates splitting large updates into smaller batches.
+const defaultBatchSize = 100
+
+// ExampleExecSplit demonstrates splitting large updates into smaller batches.
 func ExampleExecSplit(ctx context.Context, db px.IBatcher, users []User) (int64, error) {
 	queries := make([]sq.Sqlizer, 0, len(users))
 
@@ -139,11 +152,11 @@ func ExampleExecSplit(ctx context.Context, db px.IBatcher, users []User) (int64,
 		queries = append(queries, query)
 	}
 
-	// Split into batches of 100 updates
-	return px.ExecSplit(ctx, db, queries, 100)
+	// Split into batches of defaultBatchSize updates
+	return px.ExecSplit(ctx, db, queries, defaultBatchSize)
 }
 
-// ExampleInsertSplit demonstrates inserting large datasets in batches
+// ExampleInsertSplit demonstrates inserting large datasets in batches.
 func ExampleInsertSplit(ctx context.Context, db px.IBatcher, users []User) (int64, error) {
 	baseQuery := pgh.Builder().
 		Insert("users").
@@ -154,11 +167,11 @@ func ExampleInsertSplit(ctx context.Context, db px.IBatcher, users []User) (int6
 		values = append(values, pgh.Args{user.Name, user.Email, user.Status})
 	}
 
-	// Insert in batches of 100 rows
-	return px.InsertSplit(ctx, db, baseQuery, values, 100)
+	// Insert in batches of defaultBatchSize rows
+	return px.InsertSplit(ctx, db, baseQuery, values, defaultBatchSize)
 }
 
-// ExampleInsertSplitQuery demonstrates inserting data in batches and retrieving inserted rows
+// ExampleInsertSplitQuery demonstrates inserting data in batches and retrieving inserted rows.
 func ExampleInsertSplitQuery(ctx context.Context, db px.IBatcher, users []User) ([]User, error) {
 	baseQuery := pgh.Builder().
 		Insert("users").
@@ -171,7 +184,7 @@ func ExampleInsertSplitQuery(ctx context.Context, db px.IBatcher, users []User) 
 	}
 
 	var inserted []User
-	err := px.InsertSplitQuery(ctx, db, baseQuery, values, 100, &inserted)
+	err := px.InsertSplitQuery(ctx, db, baseQuery, values, defaultBatchSize, &inserted)
 	if err != nil {
 		return nil, fmt.Errorf("insert users: %w", err)
 	}
@@ -179,7 +192,7 @@ func ExampleInsertSplitQuery(ctx context.Context, db px.IBatcher, users []User) 
 	return inserted, nil
 }
 
-// ExampleSelectBatch demonstrates executing multiple select queries in a batch
+// ExampleSelectBatch demonstrates executing multiple select queries in a batch.
 func ExampleSelectBatch(ctx context.Context, db px.IBatcher, userIDs []int) ([]User, error) {
 	queries := make([]sq.Sqlizer, 0, len(userIDs))
 

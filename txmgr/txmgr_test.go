@@ -54,6 +54,7 @@ func TestTransactionManager_Begin_InTransaction(t *testing.T) {
 
 	tmInformer := NewMockITransactionInformer(mc)
 	tmInformer.EXPECT().InTransaction(gomock.Any()).Return(true).Times(4)
+	//nolint:exhaustruct // internal type, zero values are acceptable defaults for test
 	tmInformer.EXPECT().TransactionOptions(gomock.Any()).Return(Options{}).Times(3)
 
 	tm := New(tmBeginner, tmInformer)

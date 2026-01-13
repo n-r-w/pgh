@@ -11,7 +11,7 @@ type SquirrelBuilderSuite struct {
 	suite.Suite
 }
 
-// normalizeSQL converts input into a single string without duplicate spaces
+// normalizeSQL converts input into a single string without duplicate spaces.
 func (s *SquirrelBuilderSuite) normalizeSQL(sql string) string {
 	fields := strings.Fields(sql)
 	return strings.Join(fields, " ")

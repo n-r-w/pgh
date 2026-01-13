@@ -80,6 +80,7 @@ func TestPxDB(t *testing.T) {
 		require.Equal(t, []int{1, 2, 3}, ids)
 
 		// проверяем SendBatch
+		//nolint:exhaustruct // external type, QueuedQueries is managed by Queue method
 		batch := &pgx.Batch{}
 		batch.Queue("SELECT id FROM test WHERE id=1")
 		batch.Queue("SELECT id FROM test WHERE id=2")
@@ -136,7 +137,7 @@ func TestPxDB(t *testing.T) {
 		require.Error(t, errTran)
 
 		return errors.New("rollback")
-	}, txmgr.Options{}))
+	}, txmgr.Options{})) //nolint:exhaustruct // external type, zero values are acceptable defaults
 
 	// транзакция не начата
 	require.False(t, pgdbImpl.InTransaction(ctx))
