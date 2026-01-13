@@ -36,8 +36,7 @@ func ExampleSelectOne(ctx context.Context, db px.IQuerier, userID int) (*User, e
 func ExampleSelectMany(ctx context.Context, db px.IQuerier, userID int) ([]User, error) {
 	query := pgh.Builder().
 		Select("*").
-		From("users").
-		Where("id = ?", userID)
+		From("users")
 
 	var users []User
 	if err := px.Select(ctx, db, query, &users); err != nil {
