@@ -10,7 +10,7 @@ import (
 	sq "github.com/n-r-w/squirrel"
 )
 
-// ExamplePQSelectOne demonstrates using pq.SelectOne to fetch a single user
+// ExamplePQSelectOne demonstrates using pq.SelectOne to fetch a single user.
 func ExamplePQSelectOne(ctx context.Context, db pq.IQuerier, userID int) (*User, error) {
 	query := pgh.Builder().
 		Select("*").
@@ -25,7 +25,7 @@ func ExamplePQSelectOne(ctx context.Context, db pq.IQuerier, userID int) (*User,
 	return &user, nil
 }
 
-// ExamplePQSelect demonstrates using pq.Select to fetch multiple users
+// ExamplePQSelect demonstrates using pq.Select to fetch multiple users.
 func ExamplePQSelect(ctx context.Context, db pq.IQuerier, userID int) ([]User, error) {
 	query := pgh.Builder().
 		Select("*").
@@ -40,7 +40,7 @@ func ExamplePQSelect(ctx context.Context, db pq.IQuerier, userID int) ([]User, e
 	return users, nil
 }
 
-// ExamplePQExec demonstrates using pq.Exec to update a user
+// ExamplePQExec demonstrates using pq.Exec to update a user.
 func ExamplePQExec(ctx context.Context, db pq.IQuerier, user *User) error {
 	query := pgh.Builder().
 		Update("users").
@@ -54,7 +54,7 @@ func ExamplePQExec(ctx context.Context, db pq.IQuerier, user *User) error {
 	return err
 }
 
-// ExamplePQSelectFunc demonstrates using pq.SelectFunc to process rows one at a time
+// ExamplePQSelectFunc demonstrates using pq.SelectFunc to process rows one at a time.
 func ExamplePQSelectFunc(ctx context.Context, db pq.IQuerier) error {
 	query := pgh.Builder().
 		Select("id, name, email, status, bio, last_login").
@@ -75,6 +75,7 @@ func ExamplePQSelectFunc(ctx context.Context, db pq.IQuerier) error {
 			return fmt.Errorf("scan user: %w", err)
 		}
 		// Process each user here
+		//nolint:forbidigo // example code
 		fmt.Printf("Processing user: %s\n", user.Name)
 		return nil
 	})

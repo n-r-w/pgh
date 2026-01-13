@@ -1,3 +1,4 @@
+// Package telemetry provides database telemetry and monitoring functionality.
 package telemetry
 
 import (

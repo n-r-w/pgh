@@ -1,3 +1,4 @@
+// Package pq provides database/sql compatibility layer for PostgreSQL operations.
 package pq
 
 import (
@@ -5,6 +6,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/georgysavva/scany/v2/sqlscan"
 	"github.com/n-r-w/pgh/v2"
@@ -80,9 +82,11 @@ func InsertValuesPlain(ctx context.Context, db IQuerier, query string, values []
 
 	var (
 		args        = make(pgh.Args, 0, len(values[0])*len(values))
-		targetSQL   = query + " VALUES "
+		sqlBuilder  strings.Builder
 		columnCount = len(values[0])
 	)
+	sqlBuilder.WriteString(query)
+	sqlBuilder.WriteString(" VALUES ")
 	for _, v := range values {
 		if len(v) != columnCount {
 			return fmt.Errorf("pq.InsertValues: all values must have the same length. sql: %s", pgh.TruncSQL(query))
@@ -92,17 +96,19 @@ func InsertValuesPlain(ctx context.Context, db IQuerier, query string, values []
 
 	for i := range values {
 		if i != 0 {
-			targetSQL += ","
+			sqlBuilder.WriteString(",")
 		}
-		targetSQL += "("
+		sqlBuilder.WriteString("(")
 		for j := range columnCount {
 			if j != 0 {
-				targetSQL += ","
+				sqlBuilder.WriteString(",")
 			}
-			targetSQL += fmt.Sprintf("$%d", i*columnCount+j+1)
+			sqlBuilder.WriteString(fmt.Sprintf("$%d", i*columnCount+j+1))
 		}
-		targetSQL += ")"
+		sqlBuilder.WriteString(")")
 	}
+
+	targetSQL := sqlBuilder.String()
 
 	if _, err := db.ExecContext(ctx, targetSQL, args...); err != nil {
 		return fmt.Errorf("pq.InsertValues: %w [%s]", err, pgh.TruncSQL(targetSQL))

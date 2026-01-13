@@ -12,7 +12,7 @@ import (
 
 // Helpers for working with Squirrel
 
-// Exec executes a modification query. Querier can be either pgx.Tx or pg_types.Pool
+// Exec executes a modification query. Querier can be either pgx.Tx or pg_types.Pool.
 func Exec(ctx context.Context, querier IQuerier, sqlizer sq.Sqlizer) (pgconn.CommandTag, error) {
 	var (
 		sql  string
@@ -27,7 +27,7 @@ func Exec(ctx context.Context, querier IQuerier, sqlizer sq.Sqlizer) (pgconn.Com
 	return ExecPlain(ctx, querier, sql, args)
 }
 
-// Select executes a query. Querier can be either pgx.Tx or pg_types.Pool
+// Select executes a query. Querier can be either pgx.Tx or pg_types.Pool.
 func Select[T any](ctx context.Context, querier IQuerier, sqlizer sq.Sqlizer, dst *[]T) error {
 	var (
 		sql  string
@@ -74,7 +74,7 @@ func SelectOne[T any](ctx context.Context, querier IQuerier, sqlizer sq.Sqlizer,
 }
 
 // ExecSplit splits queries into groups of splitSize and executes them separately within a transaction.
-// tx can be either pgx.Tx or pg_types.Pool
+// tx can be either pgx.Tx or pg_types.Pool.
 func ExecSplit(
 	ctx context.Context, tx IBatcher, queries []sq.Sqlizer, splitSize int,
 ) (rowsAffected int64, err error) {
@@ -116,6 +116,7 @@ func InsertSplit(
 		idxTo int
 	)
 
+	//nolint:exhaustruct // external type, QueuedQueries is managed by Queue method
 	batch := pgx.Batch{}
 	for idx := 0; idx < l; idx += splitSize {
 		if idxTo = idx + splitSize; idxTo > l {
@@ -156,6 +157,7 @@ func InsertSplitQuery[T any](
 		idxTo int
 	)
 
+	//nolint:exhaustruct // external type, QueuedQueries is managed by Queue method
 	batch := pgx.Batch{}
 	for idx := 0; idx < l; idx += splitSize {
 		if idxTo = idx + splitSize; idxTo > l {
@@ -179,6 +181,7 @@ func InsertSplitQuery[T any](
 
 // ExecBatch executes a batch of queries with error checking. tx can be either pgx.Tx or pg_types.Pool.
 func ExecBatch(ctx context.Context, queries []sq.Sqlizer, tx IBatcher) (rowsAffected int64, err error) {
+	//nolint:exhaustruct // external type, QueuedQueries is managed by Queue method
 	batch := pgx.Batch{}
 
 	for _, query := range queries {
@@ -199,6 +202,7 @@ func ExecBatch(ctx context.Context, queries []sq.Sqlizer, tx IBatcher) (rowsAffe
 
 // SelectBatch executes a batch of queries with error checking. tx can be either pgx.Tx or pg_types.Pool.
 func SelectBatch[T any](ctx context.Context, queries []sq.Sqlizer, tx IBatcher, dst *[]T) error {
+	//nolint:exhaustruct // external type, QueuedQueries is managed by Queue method
 	batch := pgx.Batch{}
 
 	for _, query := range queries {
@@ -218,7 +222,7 @@ func SelectBatch[T any](ctx context.Context, queries []sq.Sqlizer, tx IBatcher, 
 	return SendBatchQuery(ctx, tx, &batch, dst)
 }
 
-// sqToSQL converts squirrel query to SQL
+// sqToSQL converts squirrel query to SQL.
 func sqToSQL(_ context.Context, sqlizer sq.Sqlizer) (sql string, args []any, err error) {
 	if sql, args, err = sqlizer.ToSql(); err != nil {
 		return sql, args, err

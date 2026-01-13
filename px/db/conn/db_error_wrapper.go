@@ -28,6 +28,7 @@ func (i *ErrorWrapper) InTransaction() bool {
 
 // TransactionOptions always returns an empty object.
 func (i *ErrorWrapper) TransactionOptions() txmgr.Options {
+	//nolint:exhaustruct // external type, zero values are acceptable defaults
 	return txmgr.Options{}
 }
 

@@ -15,7 +15,7 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-// suffixImpl реализация sq.Sqlizer для мока suffix
+// suffixImpl implements sq.Sqlizer for suffix mock.
 type suffixImpl struct {
 	sq.Sqlizer
 }
@@ -24,7 +24,7 @@ func (s suffixImpl) ToSql() (string, []any, error) {
 	return "ON CONFLICT DO NOTHING", nil, nil
 }
 
-// Test_InsertSplitPlain_SendBatch проверяет работу InsertSplitPlain, SendBatch
+// Test_InsertSplit_SendBatch tests InsertSplit and SendBatch.
 func Test_InsertSplit_SendBatch(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
@@ -39,7 +39,7 @@ func Test_InsertSplit_SendBatch(t *testing.T) {
 		processedBatch int
 		processedExecs int
 		processedCount int
-		columns        = sq.Insert("test").Columns("id", "name").SuffixExpr(suffixImpl{})
+		columns        = sq.Insert("test").Columns("id", "name").SuffixExpr(suffixImpl{Sqlizer: nil})
 		expected       int
 	)
 
@@ -185,6 +185,7 @@ func Test_InsertSplitQuery(t *testing.T) {
 			mockRows.EXPECT().Err().Return(nil).AnyTimes()
 			mockRows.EXPECT().Close().Return().AnyTimes()
 			mockRows.EXPECT().FieldDescriptions().Return([]pgconn.FieldDescription{
+				//nolint:exhaustruct // external type, only set necessary fields for test
 				{Name: "id"},
 			}).AnyTimes()
 
@@ -222,7 +223,7 @@ func Test_InsertSplitQuery(t *testing.T) {
 	require.Equal(t, 1, processedCount)
 }
 
-// Test_SendBatchQuery проверяет работу SendBatchQuery
+// Test_SendBatchQuery tests SendBatchQuery.
 func Test_SendBatchQuery(t *testing.T) {
 	t.Parallel()
 
@@ -231,6 +232,7 @@ func Test_SendBatchQuery(t *testing.T) {
 	mc := gomock.NewController(t)
 	defer mc.Finish()
 
+	//nolint:exhaustruct // external type, QueuedQueries is managed by Queue method
 	batch := &pgx.Batch{}
 	batch.Queue("SELECT * FROM test_table WHERE id = $1", 1)
 	batch.Queue("SELECT * FROM test_table WHERE id = $1", 2)
@@ -247,6 +249,7 @@ func Test_SendBatchQuery(t *testing.T) {
 	).AnyTimes()
 	rowsMock.EXPECT().Close().Return().AnyTimes()
 	rowsMock.EXPECT().Err().Return(nil).AnyTimes()
+	//nolint:exhaustruct // external type, only set necessary fields for test
 	rowsMock.EXPECT().FieldDescriptions().Return([]pgconn.FieldDescription{{Name: "id"}}).AnyTimes()
 	rowsMock.EXPECT().Scan(gomock.Any()).DoAndReturn(
 		func(dst ...any) error {
@@ -276,7 +279,7 @@ func Test_SendBatchQuery(t *testing.T) {
 	require.Len(t, dst, 3)
 }
 
-// Test_ExecSplit проверяет работу ExecSplitPlain, ExecSplit
+// Test_ExecSplit tests ExecSplitPlain and ExecSplit.
 func Test_ExecSplit(t *testing.T) {
 	t.Parallel()
 
@@ -312,7 +315,7 @@ func Test_ExecSplit(t *testing.T) {
 	require.Equal(t, int64(3), rowsAffected)
 	require.Equal(t, 3, batchLen)
 
-	// Проверяем ExecSplit, т.к. он использует ExecSplitPlain
+	// Test ExecSplit, as it uses ExecSplitPlain
 	var queriesSQ []sq.Sqlizer
 	for i := range queries {
 		queriesSQ = append(queriesSQ, pgh.Builder().Select("*").From("test_table").Where(sq.Eq{"id": i}))

@@ -7,7 +7,9 @@ import (
 )
 
 func TestValidateFilter(t *testing.T) {
+	t.Parallel()
 	t.Run("Invalid filter because of missing order alias", func(t *testing.T) {
+		t.Parallel()
 		const (
 			userID = iota
 			userName

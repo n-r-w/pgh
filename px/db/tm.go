@@ -19,6 +19,7 @@ func (p *PxDB) beginTxHelper(ctx context.Context, opts txmgr.Options) (*pgxpool.
 	}
 
 	var tx pgx.Tx
+	//nolint:exhaustruct // external type, only set necessary fields
 	tx, err = con.BeginTx(ctx, pgx.TxOptions{
 		IsoLevel:   getPgxLevel(opts.Level),
 		AccessMode: getPgxMode(opts.Mode),
@@ -68,6 +69,7 @@ func (p *PxDB) Begin(ctx context.Context, f func(ctxTr context.Context) error, o
 	return tx.Commit(ctx)
 }
 
+// BeginTx begins a new transaction with the provided options.
 func (p *PxDB) BeginTx(ctx context.Context, opts txmgr.Options) (context.Context, txmgr.ITransactionFinisher, error) {
 	con, tx, err := p.beginTxHelper(ctx, opts)
 	if err != nil {
@@ -93,6 +95,7 @@ func (p *PxDB) InTransaction(ctx context.Context) bool {
 func (p *PxDB) TransactionOptions(ctx context.Context) txmgr.Options {
 	tx, ok := txFromContext(ctx)
 	if !ok {
+		//nolint:exhaustruct // external type, zero values are acceptable defaults
 		return txmgr.Options{}
 	}
 

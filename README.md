@@ -53,3 +53,4 @@ go get github.com/n-r-w/pgh/v2/pq
 
 - [Examples of using with github.com/jackc/pgx package](examples/pgx.go)
 - [Examples of using with the database/sql package](examples/pq.go)
+- [How-to guide](HOWTO.md)

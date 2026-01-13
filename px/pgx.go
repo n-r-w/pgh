@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/georgysavva/scany/v2/pgxscan"
 	pgx "github.com/jackc/pgx/v5"
@@ -11,7 +12,7 @@ import (
 	"github.com/n-r-w/pgh/v2"
 )
 
-// ExecPlain executes a modification query. Querier can be either pgx.Tx or pg_types.Pool
+// ExecPlain executes a modification query. Querier can be either pgx.Tx or pg_types.Pool.
 func ExecPlain(ctx context.Context, querier IQuerier, sql string, args pgh.Args) (pgconn.CommandTag, error) {
 	var (
 		tag pgconn.CommandTag
@@ -25,7 +26,7 @@ func ExecPlain(ctx context.Context, querier IQuerier, sql string, args pgh.Args)
 	return tag, nil
 }
 
-// SelectPlain executes a query. Querier can be either pgx.Tx or pg_types.Pool
+// SelectPlain executes a query. Querier can be either pgx.Tx or pg_types.Pool.
 func SelectPlain[T any](ctx context.Context, querier IQuerier, sql string, dst *[]T, args pgh.Args) error {
 	if err := pgxscan.Select(ctx, querier, dst, sql, args...); err != nil {
 		return fmt.Errorf("sql select: %w [%s]", err, pgh.TruncSQL(sql))
@@ -108,6 +109,7 @@ func execSplitPlainHelper(
 	queries []string,
 	args []pgh.Args,
 ) (rowsAffected int64, err error) {
+	//nolint:exhaustruct // external type, QueuedQueries is managed by Queue method
 	batch := pgx.Batch{}
 
 	for idx, query := range queries {
@@ -132,6 +134,7 @@ func InsertSplitPlain(
 		idxTo int
 	)
 
+	//nolint:exhaustruct // external type, QueuedQueries is managed by Queue method
 	batch := pgx.Batch{}
 	for idx := 0; idx < l; idx += splitSize {
 		if idxTo = idx + splitSize; idxTo > l {
@@ -198,9 +201,11 @@ func InsertValuesPlain(ctx context.Context, querier IQuerier, sql string, values
 
 	var (
 		args        = make(pgh.Args, 0, len(values[0])*len(values))
-		targetSQL   = sql + " VALUES "
+		sqlBuilder  strings.Builder
 		columnCount = len(values[0])
 	)
+	sqlBuilder.WriteString(sql)
+	sqlBuilder.WriteString(" VALUES ")
 	for _, v := range values {
 		if len(v) != columnCount {
 			return fmt.Errorf("pgx.InsertValues: all values must have the same length. sql: %s", pgh.TruncSQL(sql))
@@ -210,17 +215,19 @@ func InsertValuesPlain(ctx context.Context, querier IQuerier, sql string, values
 
 	for i := range values {
 		if i != 0 {
-			targetSQL += ","
+			sqlBuilder.WriteString(",")
 		}
-		targetSQL += "("
+		sqlBuilder.WriteString("(")
 		for j := range columnCount {
 			if j != 0 {
-				targetSQL += ","
+				sqlBuilder.WriteString(",")
 			}
-			targetSQL += fmt.Sprintf("$%d", i*columnCount+j+1)
+			sqlBuilder.WriteString(fmt.Sprintf("$%d", i*columnCount+j+1))
 		}
-		targetSQL += ")"
+		sqlBuilder.WriteString(")")
 	}
+
+	targetSQL := sqlBuilder.String()
 
 	if _, err := querier.Exec(ctx, targetSQL, args...); err != nil {
 		return fmt.Errorf("pgx.InsertValues: %w [%s]", err, pgh.TruncSQL(targetSQL))

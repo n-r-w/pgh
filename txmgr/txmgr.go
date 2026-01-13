@@ -61,6 +61,7 @@ func (tm *TransactionManager) prepareBegin(ctx context.Context, opts []Option) (
 	tmOpts := &Options{
 		Level: TxLevelDefault,
 		Mode:  TxModeDefault,
+		Lock:  false,
 	}
 	for _, opt := range opts {
 		opt(tmOpts)

@@ -8,7 +8,7 @@ const (
 	servicePaginatorType
 )
 
-// Paginator Data pagination
+// Paginator Data pagination.
 type Paginator struct {
 	limit  uint32
 	offset uint64
@@ -18,30 +18,32 @@ type Paginator struct {
 	paginatorType paginatorType
 }
 
-// NewFrontPaginator returns a frontend type paginator
+// NewFrontPaginator returns a frontend type paginator.
 func NewFrontPaginator(limit uint32, page uint64) *Paginator {
 	return &Paginator{
 		limit:         limit,
-		offset:        (page - 1) * uint64(limit),
+		lastID:        nil,
 		paginatorType: frontPaginatorType,
+		offset:        (page - 1) * uint64(limit),
 	}
 }
 
-// NewServicePaginator returns a service type paginator
+// NewServicePaginator returns a service type paginator.
 func NewServicePaginator(limit uint32, lastID uint64) *Paginator {
 	return &Paginator{
 		limit:         limit,
 		lastID:        lastID,
 		paginatorType: servicePaginatorType,
+		offset:        0,
 	}
 }
 
-// IsFront returns true if paginator type is frontend
+// IsFront returns true if paginator type is frontend.
 func (p *Paginator) IsFront() bool {
 	return p.paginatorType == frontPaginatorType
 }
 
-// IsService returns true if paginator type is service
+// IsService returns true if paginator type is service.
 func (p *Paginator) IsService() bool {
 	return p.paginatorType == servicePaginatorType
 }

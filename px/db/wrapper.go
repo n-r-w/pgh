@@ -24,6 +24,8 @@ type Wrapper struct {
 func newDatabaseWrapperNoTran(db *PxDB, logQueries bool) *Wrapper {
 	return &Wrapper{
 		db:         db,
+		tx:         nil,
+		txOpts:     txmgr.Options{Level: 0, Mode: 0, Lock: false},
 		logQueries: logQueries,
 	}
 }
@@ -46,7 +48,7 @@ func (i *Wrapper) InTransaction() bool {
 // TransactionOptions returns transaction parameters. If transaction is not started, returns false.
 func (i *Wrapper) TransactionOptions() txmgr.Options {
 	if i.tx == nil {
-		return txmgr.Options{}
+		return txmgr.Options{Level: 0, Mode: 0, Lock: false}
 	}
 	return i.txOpts
 }

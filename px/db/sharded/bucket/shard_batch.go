@@ -31,6 +31,7 @@ func NewShardBatch[TKEY any](db *DB[TKEY]) *ShardBatch[TKEY] {
 	return &ShardBatch[TKEY]{
 		db:        db,
 		batchInfo: make(map[shard.ShardID]*shardBatchInfo),
+		closed:    false,
 	}
 }
 
@@ -47,7 +48,13 @@ func (b *ShardBatch[TKEY]) Queue(key TKEY, sql string, args ...any) error {
 
 	info, ok := b.batchInfo[shardID]
 	if !ok {
-		info = &shardBatchInfo{}
+		info = &shardBatchInfo{
+			pgxBatch: pgx.Batch{
+				QueuedQueries: nil,
+			},
+			res:       nil,
+			processed: 0,
+		}
 		b.batchInfo[shardID] = info
 	}
 

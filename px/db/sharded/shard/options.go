@@ -1,3 +1,4 @@
+// Package shard provides configuration options for sharded database.
 package shard
 
 import (
