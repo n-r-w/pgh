@@ -29,17 +29,17 @@ func TestPxDB(t *testing.T) {
 
 	require.Equal(t, "test", pgdbImpl.name)
 
-	// запуск
+	// startup
 	ctxStart, cancelStart := context.WithTimeout(ctx, 2*time.Second)
 	t.Cleanup(cancelStart)
 	require.NoError(t, pgdbImpl.Start(ctxStart))
 
-	// проверка реализации txmgr.ITransactionManager
+	// verify txmgr.ITransactionManager implementation
 
-	// транзакция не начата
+	// transaction not started
 	require.False(t, pgdbImpl.InTransaction(ctx))
 
-	// проверка databaseWrapper
+	// verify databaseWrapper
 	iwrapper := pgdbImpl.Connection(ctx, conn.WithLogQueries())
 	wrapper, _ := iwrapper.(*Wrapper)
 	require.NotNil(t, wrapper)
@@ -47,11 +47,11 @@ func TestPxDB(t *testing.T) {
 	require.Nil(t, wrapper.tx)
 	require.True(t, wrapper.logQueries)
 
-	// начало транзакции
+	// begin transaction
 	require.Error(t, pgdbImpl.Begin(ctx, func(ctxTr context.Context) error {
 		require.True(t, pgdbImpl.InTransaction(ctxTr))
 
-		// проверка databaseWrapper
+		// verify databaseWrapper
 		iwrapperTran := pgdbImpl.Connection(ctxTr)
 		require.NotNil(t, iwrapperTran)
 		wrapperTran, _ := iwrapperTran.(*Wrapper)
@@ -59,27 +59,27 @@ func TestPxDB(t *testing.T) {
 		require.NotNil(t, wrapperTran.tx)
 		require.True(t, wrapperTran.logQueries)
 
-		// создаем таблицу в БД
+		// create table in DB
 		_, errTran := wrapperTran.Exec(ctxTr, "CREATE TABLE test (id int)")
 		require.NoError(t, errTran)
 
-		// вставляем данные в БД
+		// insert data into DB
 		_, errTran = wrapperTran.Exec(ctxTr, "INSERT INTO test (id) VALUES (1), (2), (3)")
 		require.NoError(t, errTran)
 
-		// выбираем данные из БД через QueryRow
+		// select data from DB via QueryRow
 		var id int
 		require.NoError(t, pgxscan.Get(ctxTr, wrapperTran, &id, "SELECT id FROM test WHERE id=1"))
 		require.Equal(t, 1, id)
 
-		// выбираем все данные из БД через Query
+		// select all data from DB via Query
 		var ids []int
 
 		errTran = pgxscan.Select(ctxTr, wrapperTran, &ids, "SELECT id FROM test")
 		require.NoError(t, errTran)
 		require.Equal(t, []int{1, 2, 3}, ids)
 
-		// проверяем SendBatch
+		// verify SendBatch
 		//nolint:exhaustruct // external type, QueuedQueries is managed by Queue method
 		batch := &pgx.Batch{}
 		batch.Queue("SELECT id FROM test WHERE id=1")
@@ -100,14 +100,14 @@ func TestPxDB(t *testing.T) {
 		require.NoError(t, batchResult.Close())
 		require.Equal(t, []int{1, 2, 3}, ids)
 
-		// проверяем CopyFrom
+		// verify CopyFrom
 		_, errTran = wrapperTran.CopyFrom(ctxTr, pgx.Identifier{"test"}, []string{"id"}, pgx.CopyFromRows([][]any{{4}, {5}, {6}}))
 		require.NoError(t, errTran)
 		ids = []int{}
 		require.NoError(t, pgxscan.Select(ctxTr, wrapperTran, &ids, "SELECT id FROM test"))
 		require.Equal(t, []int{1, 2, 3, 4, 5, 6}, ids)
 
-		// проверяем LargeObjects
+		// verify LargeObjects
 		lObjects := wrapperTran.LargeObjects()
 		require.NotNil(t, lObjects)
 
@@ -139,14 +139,14 @@ func TestPxDB(t *testing.T) {
 		return errors.New("rollback")
 	}, txmgr.Options{})) //nolint:exhaustruct // external type, zero values are acceptable defaults
 
-	// транзакция не начата
+	// transaction not started
 	require.False(t, pgdbImpl.InTransaction(ctx))
 
-	// данные в БД не попали (нет таблицы test)
+	// data not inserted into DB (no test table)
 	_, err := wrapper.Exec(ctx, "SELECT * FROM test")
 	require.Error(t, err)
 
-	// остановка
+	// shutdown
 	ctxStop, cancelStop := context.WithTimeout(ctx, 2*time.Second)
 	t.Cleanup(cancelStop)
 	require.NoError(t, pgdbImpl.Stop(ctxStop))

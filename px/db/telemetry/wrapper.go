@@ -45,7 +45,7 @@ func (p *ConnectionWrapper) Query(ctx context.Context, sql string, args ...any) 
 	)
 
 	p.tFunc(ctx, "query", sql, args, func() error {
-		rows, err = p.con.Query(ctx, sql, args...) //nolint:sqlclosecheck // будет закрыто вызывающим
+		rows, err = p.con.Query(ctx, sql, args...) //nolint:sqlclosecheck // will be closed by caller
 		return err
 	})
 
