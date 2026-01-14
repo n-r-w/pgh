@@ -26,21 +26,19 @@ type PxDB struct {
 	pool   *pgxpool.Pool
 
 	logger ctxlog.ILogger
+
+	// testHookAfterAcquire is an internal hook for tests only.
+	// If set, called after successful Acquire and before BeginTx.
+	testHookAfterAcquire func()
 }
 
 var _ bootstrap.IService = (*PxDB)(nil)
 
 // New creates a new instance of PxDB.
 func New(opt ...Option) *PxDB {
-	p := &PxDB{
-		name:           "pgdb",
-		logger:         ctxlog.NewStubWrapper(),
-		restartPolicy:  nil,
-		dsn:            "",
-		logQueries:     false,
-		afterStartFunc: nil,
-		config:         nil,
-		pool:           nil,
+	p := &PxDB{ //nolint:exhaustruct // default values
+		name:   "pgdb",
+		logger: ctxlog.NewStubWrapper(),
 	}
 
 	for _, o := range opt {

@@ -2,6 +2,7 @@ package px
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
@@ -78,6 +79,10 @@ func SelectOne[T any](ctx context.Context, querier IQuerier, sqlizer sq.Sqlizer,
 func ExecSplit(
 	ctx context.Context, tx IBatcher, queries []sq.Sqlizer, splitSize int,
 ) (rowsAffected int64, err error) {
+	if splitSize <= 0 {
+		return 0, errors.New("ExecSplitPlain: splitSize must be greater than zero")
+	}
+
 	var (
 		queriesSQL = make([]string, 0, len(queries))
 		args       = make([]pgh.Args, 0, len(queries))
@@ -109,6 +114,10 @@ func InsertSplit(
 	values []pgh.Args,
 	splitSize int,
 ) (rowsAffected int64, err error) {
+	if splitSize <= 0 {
+		return 0, errors.New("ExecSplitPlain: splitSize must be greater than zero")
+	}
+
 	var (
 		sql   string
 		args  []any
@@ -150,6 +159,10 @@ func InsertSplitQuery[T any](
 	splitSize int,
 	dst *[]T,
 ) (err error) {
+	if splitSize <= 0 {
+		return errors.New("ExecSplitPlain: splitSize must be greater than zero")
+	}
+
 	var (
 		sql   string
 		args  []any

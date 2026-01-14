@@ -61,7 +61,9 @@ func (s *Service) Stop(ctx context.Context) error {
 func (s *Service) Connection(ctx context.Context, opt ...conn.ConnectionOption) conn.IConnection {
 	var span ISpan
 	ctx, span = s.telemetry.StartSpan(ctx, "connection")
-	defer span.End()
+	if span != nil {
+		defer span.End()
+	}
 
 	return newWrapper(s.parent.Connection(ctx, opt...), s.telemetryHelper)
 }

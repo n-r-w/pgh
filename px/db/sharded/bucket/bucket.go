@@ -316,30 +316,21 @@ func (b *DB[T]) RunBucketFunc(ctx context.Context,
 	errGroup, ctxGroup := errgroup.WithContext(ctx)
 	errGroup.SetLimit(b.runBucketFuncLimit)
 
-	// the result is ignored, because we pass our errGroup to RunFunc
 	_ = b.shardDB.RunFunc(ctxGroup,
 		func(ctxFunc context.Context, shardID shard.ShardID, con conn.IConnection) error {
-			errGroup.Go(func() error {
-				for _, bucketInfo := range b.buckets {
-					if shardID != bucketInfo.ShardID {
-						continue
-					}
-
-					for bucketID := bucketInfo.BucketRange.FromID; bucketID <= bucketInfo.BucketRange.ToID; bucketID++ {
-						bucketIDCopy := bucketID
-						errGroup.Go(func() error {
-							con := newBucketWrapper(con, bucketIDCopy)
-							if err := f(ctxFunc, shardID, bucketIDCopy, con); err != nil {
-								return err
-							}
-
-							return nil
-						})
-					}
+			for _, bucketInfo := range b.buckets {
+				if shardID != bucketInfo.ShardID {
+					continue
 				}
 
-				return nil
-			})
+				for bucketID := bucketInfo.BucketRange.FromID; bucketID <= bucketInfo.BucketRange.ToID; bucketID++ {
+					bucketIDCopy := bucketID
+					errGroup.Go(func() error {
+						bucketCon := newBucketWrapper(con, bucketIDCopy)
+						return f(ctxFunc, shardID, bucketIDCopy, bucketCon)
+					})
+				}
+			}
 
 			return nil
 		},
