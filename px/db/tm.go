@@ -20,6 +20,11 @@ func (p *PxDB) beginTxHelper(ctx context.Context, opts txmgr.Options) (*pgxpool.
 		p.testHookAfterAcquire()
 	}
 
+	if err := ctx.Err(); err != nil {
+		con.Release()
+		return nil, nil, fmt.Errorf("failed to begin transaction: %w", err)
+	}
+
 	//nolint:exhaustruct // external type, only set necessary fields
 	tx, err := con.BeginTx(ctx, pgx.TxOptions{
 		IsoLevel:   getPgxLevel(opts.Level),
