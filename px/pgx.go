@@ -75,8 +75,6 @@ func SelectOnePlain[T any](ctx context.Context, querier IQuerier, sql string, ds
 }
 
 // ExecSplitPlain splits queries into groups of splitSize and executes them separately within a transaction.
-// tx can be either pgx.Tx or pg_types.Pool
-// ExecSplitPlain splits queries into groups of splitSize and executes them separately within a transaction.
 // tx can be either pgx.Tx or pg_types.Pool.
 func ExecSplitPlain(
 	ctx context.Context,
@@ -85,6 +83,10 @@ func ExecSplitPlain(
 	args []pgh.Args,
 	splitSize int,
 ) (rowsAffected int64, err error) {
+	if splitSize <= 0 {
+		return 0, errors.New("ExecSplitPlain: splitSize must be greater than zero")
+	}
+
 	var (
 		l     = len(queries)
 		idxTo int
@@ -129,6 +131,10 @@ func InsertSplitPlain(
 	values []pgh.Args,
 	splitSize int,
 ) (rowsAffected int64, err error) {
+	if splitSize <= 0 {
+		return 0, errors.New("InsertSplitPlain: splitSize must be greater than zero")
+	}
+
 	var (
 		l     = len(values)
 		idxTo int

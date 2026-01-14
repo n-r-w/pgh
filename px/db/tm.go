@@ -10,21 +10,28 @@ import (
 	"github.com/n-r-w/pgh/v2/txmgr"
 )
 
-// Implementation for TransactionManager
-
 func (p *PxDB) beginTxHelper(ctx context.Context, opts txmgr.Options) (*pgxpool.Conn, pgx.Tx, error) {
 	con, err := p.pool.Acquire(ctx)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to acquire connection: %w", err)
 	}
 
-	var tx pgx.Tx
+	if p.testHookAfterAcquire != nil {
+		p.testHookAfterAcquire()
+	}
+
+	if err := ctx.Err(); err != nil {
+		con.Release()
+		return nil, nil, fmt.Errorf("failed to begin transaction: %w", err)
+	}
+
 	//nolint:exhaustruct // external type, only set necessary fields
-	tx, err = con.BeginTx(ctx, pgx.TxOptions{
+	tx, err := con.BeginTx(ctx, pgx.TxOptions{
 		IsoLevel:   getPgxLevel(opts.Level),
 		AccessMode: getPgxMode(opts.Mode),
 	})
 	if err != nil {
+		con.Release()
 		return nil, nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
 
