@@ -80,7 +80,7 @@ func ExecSplit(
 	ctx context.Context, tx IBatcher, queries []sq.Sqlizer, splitSize int,
 ) (rowsAffected int64, err error) {
 	if splitSize <= 0 {
-		return 0, errors.New("ExecSplitPlain: splitSize must be greater than zero")
+		return 0, errors.New("ExecSplit: splitSize must be greater than zero")
 	}
 
 	var (
@@ -115,7 +115,7 @@ func InsertSplit(
 	splitSize int,
 ) (rowsAffected int64, err error) {
 	if splitSize <= 0 {
-		return 0, errors.New("ExecSplitPlain: splitSize must be greater than zero")
+		return 0, errors.New("InsertSplit: splitSize must be greater than zero")
 	}
 
 	var (
@@ -160,7 +160,7 @@ func InsertSplitQuery[T any](
 	dst *[]T,
 ) (err error) {
 	if splitSize <= 0 {
-		return errors.New("ExecSplitPlain: splitSize must be greater than zero")
+		return errors.New("InsertSplitQuery: splitSize must be greater than zero")
 	}
 
 	var (

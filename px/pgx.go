@@ -132,7 +132,7 @@ func InsertSplitPlain(
 	splitSize int,
 ) (rowsAffected int64, err error) {
 	if splitSize <= 0 {
-		return 0, errors.New("ExecSplitPlain: splitSize must be greater than zero")
+		return 0, errors.New("InsertSplitPlain: splitSize must be greater than zero")
 	}
 
 	var (
