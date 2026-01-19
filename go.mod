@@ -1,12 +1,12 @@
 module github.com/n-r-w/pgh/v2
 
-go 1.23.8
+go 1.24.0
 
 require (
 	github.com/cenkalti/backoff/v5 v5.0.3
 	github.com/georgysavva/scany/v2 v2.1.4
 	github.com/jackc/pgerrcode v0.0.0-20240316143900-6e2875d9b438
-	github.com/jackc/pgx/v5 v5.7.6
+	github.com/jackc/pgx/v5 v5.8.0
 	github.com/n-r-w/bootstrap v1.0.6
 	github.com/n-r-w/ctxlog v1.1.1
 	github.com/n-r-w/squirrel v1.4.3
@@ -88,7 +88,7 @@ require (
 	github.com/samber/lo v1.47.0
 	golang.org/x/crypto v0.40.0 // indirect
 	golang.org/x/exp v0.0.0-20250620022241-b7579e27df2b // indirect
-	golang.org/x/sync v0.16.0
-	golang.org/x/text v0.27.0 // indirect
+	golang.org/x/sync v0.17.0
+	golang.org/x/text v0.29.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
