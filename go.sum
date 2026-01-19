@@ -111,8 +111,8 @@ github.com/montanaflynn/stats v0.7.1 h1:etflOAAHORrCC44V+aR6Ftzort912ZU+YLiSTuV8
 github.com/montanaflynn/stats v0.7.1/go.mod h1:etXPPgVO6n31NxCd9KQUMvCM+ve0ruNzt6R8Bnaayow=
 github.com/morikuni/aec v1.0.0 h1:nP9CBfwrvYnBRgY6qfDQkygYDmYwOilePFkwzv4dU8A=
 github.com/morikuni/aec v1.0.0/go.mod h1:BbKIizmSmc5MMPqRYbxO4ZU0S0+P200+tUnFx7PXmsc=
-github.com/n-r-w/bootstrap v1.0.6 h1:HeH2OqO7L8xpNdC8QvOC5060g6rtKtlzOpwusGUbRpE=
-github.com/n-r-w/bootstrap v1.0.6/go.mod h1:nRyxPLGlb4wuQ4t0dWE514LYW/5URTtKqqOUOOzdcGU=
+github.com/n-r-w/bootstrap v1.1.0 h1:FZ3SPvq3DjWU96FrELZBeQU0K33NYA2KH4ZTFdWbb2U=
+github.com/n-r-w/bootstrap v1.1.0/go.mod h1:EjhTpWwCX/tCPF76H3ClfgLWgO29QvnntzftH7tdqKc=
 github.com/n-r-w/ctxlog v1.1.1 h1:1pw8Bg6ILLT4s4eWtEPQ0b05JjCh9839RK++fV7g7QY=
 github.com/n-r-w/ctxlog v1.1.1/go.mod h1:fLG3o8sMifh1U4zmuoh2w99fQKe/74khL0XnQOlnQQs=
 github.com/n-r-w/squirrel v1.4.3 h1:99DxLN3TGeS/NJ40/OvBmJ9stugy5rB+hU7IEMMvLVI=
