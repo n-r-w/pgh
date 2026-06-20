@@ -10,12 +10,12 @@ require (
 	github.com/n-r-w/bootstrap v1.1.0
 	github.com/n-r-w/ctxlog v1.1.3
 	github.com/n-r-w/squirrel v1.5.1
-	github.com/n-r-w/testdock/v2 v2.4.0
-	github.com/samber/lo v1.47.0
+	github.com/n-r-w/testdock/v2 v2.5.0
+	github.com/samber/lo v1.53.0
 	github.com/stretchr/testify v1.11.1
 	go.opentelemetry.io/otel/trace v1.37.0
 	go.uber.org/mock v0.6.0
-	golang.org/x/sync v0.18.0
+	golang.org/x/sync v0.21.0
 )
 
 require (
