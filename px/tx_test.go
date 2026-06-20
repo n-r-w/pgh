@@ -22,8 +22,7 @@ func TestBeginFunc(t *testing.T) {
 		mockTx := NewMockTx(ctrl)
 		mockConn := NewMockITransactionBeginner(ctrl)
 
-		ctx := context.Background()
-		//nolint:exhaustruct // external type, zero values are acceptable defaults
+		ctx := t.Context()
 		mockConn.EXPECT().BeginTx(ctx, pgx.TxOptions{}).Return(mockTx, nil)
 		mockTx.EXPECT().Commit(ctx).Return(nil)
 		// Account for deferred Rollback that happens even in successful case
@@ -48,8 +47,7 @@ func TestBeginFunc(t *testing.T) {
 		mockConn := NewMockITransactionBeginner(ctrl)
 		expectedErr := errors.New("begin error")
 
-		ctx := context.Background()
-		//nolint:exhaustruct // external type, zero values are acceptable defaults
+		ctx := t.Context()
 		mockConn.EXPECT().BeginTx(ctx, pgx.TxOptions{}).Return(nil, expectedErr)
 
 		executed := false
@@ -73,8 +71,7 @@ func TestBeginFunc(t *testing.T) {
 		mockConn := NewMockITransactionBeginner(ctrl)
 		expectedErr := errors.New("execution error")
 
-		ctx := context.Background()
-		//nolint:exhaustruct // external type, zero values are acceptable defaults
+		ctx := t.Context()
 		mockConn.EXPECT().BeginTx(ctx, pgx.TxOptions{}).Return(mockTx, nil)
 		// Expect two Rollback calls - one explicit and one from defer
 		mockTx.EXPECT().Rollback(ctx).Return(nil)
@@ -98,8 +95,7 @@ func TestBeginFunc(t *testing.T) {
 		execErr := errors.New("execution error")
 		rollbackErr := errors.New("rollback error")
 
-		ctx := context.Background()
-		//nolint:exhaustruct // external type, zero values are acceptable defaults
+		ctx := t.Context()
 		mockConn.EXPECT().BeginTx(ctx, pgx.TxOptions{}).Return(mockTx, nil)
 		// Expect two Rollback calls - one explicit and one from defer
 		mockTx.EXPECT().Rollback(ctx).Return(rollbackErr)
@@ -124,8 +120,7 @@ func TestBeginFunc(t *testing.T) {
 		mockConn := NewMockITransactionBeginner(ctrl)
 		commitErr := errors.New("commit error")
 
-		ctx := context.Background()
-		//nolint:exhaustruct // external type, zero values are acceptable defaults
+		ctx := t.Context()
 		mockConn.EXPECT().BeginTx(ctx, pgx.TxOptions{}).Return(mockTx, nil)
 		mockTx.EXPECT().Commit(ctx).Return(commitErr)
 		// Account for deferred Rollback after commit failure
@@ -148,8 +143,7 @@ func TestBeginFunc(t *testing.T) {
 		mockTx := NewMockTx(ctrl)
 		mockConn := NewMockITransactionBeginner(ctrl)
 
-		ctx := context.Background()
-		//nolint:exhaustruct // external type, zero values are acceptable defaults
+		ctx := t.Context()
 		mockConn.EXPECT().BeginTx(ctx, pgx.TxOptions{}).Return(mockTx, nil)
 		// Expect two Rollback calls - one from panic recovery and one from defer
 		mockTx.EXPECT().Rollback(ctx).Return(nil)

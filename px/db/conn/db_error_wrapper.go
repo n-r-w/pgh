@@ -22,18 +22,17 @@ func NewDatabaseErrorWrapper(err error) *ErrorWrapper {
 }
 
 // InTransaction always returns false.
-func (i *ErrorWrapper) InTransaction() bool {
+func (*ErrorWrapper) InTransaction() bool {
 	return false
 }
 
 // TransactionOptions always returns an empty object.
-func (i *ErrorWrapper) TransactionOptions() txmgr.Options {
-	//nolint:exhaustruct // external type, zero values are acceptable defaults
+func (*ErrorWrapper) TransactionOptions() txmgr.Options {
 	return txmgr.Options{}
 }
 
 // WithoutTransaction returns a context without transaction.
-func (i *ErrorWrapper) WithoutTransaction(ctx context.Context) context.Context {
+func (*ErrorWrapper) WithoutTransaction(ctx context.Context) context.Context {
 	return ctx
 }
 

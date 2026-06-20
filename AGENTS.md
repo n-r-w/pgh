@@ -1,7 +1,7 @@
 # Project Rules
 
 ## Tech Stack
-- Go 1.23.8
+- Go 1.26+
 - golangci-lint-v2 for linting
 - go.uber.org/mock/gomock for mocking
 - github.com/stretchr/testify for assertions

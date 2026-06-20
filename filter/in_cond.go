@@ -9,7 +9,7 @@ type inCond struct {
 
 // NewInCond returns an object for creating an IN condition in SQL.
 func NewInCond[T any](sqlName string, values []T) *inCond { //nolint:revive //unexported-return is intentional design
-	anyValues := []any{}
+	anyValues := make([]any, 0, len(values))
 	for _, v := range values {
 		anyValues = append(anyValues, v)
 	}

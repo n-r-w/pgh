@@ -76,7 +76,7 @@ func ExamplePQSelectFunc(ctx context.Context, db pq.IQuerier) error {
 		}
 		// Process each user here
 		//nolint:forbidigo // example code
-		fmt.Printf("Processing user: %s\n", user.Name)
+		_, _ = fmt.Printf("Processing user: %s\n", user.Name)
 		return nil
 	})
 }

@@ -53,8 +53,8 @@ func SelectFuncPlain(
 		}
 	}
 
-	if err := rows.Err(); err != nil {
-		return fmt.Errorf("sql rows: %w [%s]", err, pgh.TruncSQL(query))
+	if rowsErr := rows.Err(); rowsErr != nil {
+		return fmt.Errorf("sql rows: %w [%s]", rowsErr, pgh.TruncSQL(query))
 	}
 
 	return nil
@@ -85,8 +85,8 @@ func InsertValuesPlain(ctx context.Context, db IQuerier, query string, values []
 		sqlBuilder  strings.Builder
 		columnCount = len(values[0])
 	)
-	sqlBuilder.WriteString(query)
-	sqlBuilder.WriteString(" VALUES ")
+	_, _ = sqlBuilder.WriteString(query)
+	_, _ = sqlBuilder.WriteString(" VALUES ")
 	for _, v := range values {
 		if len(v) != columnCount {
 			return fmt.Errorf("pq.InsertValues: all values must have the same length. sql: %s", pgh.TruncSQL(query))
@@ -96,16 +96,16 @@ func InsertValuesPlain(ctx context.Context, db IQuerier, query string, values []
 
 	for i := range values {
 		if i != 0 {
-			sqlBuilder.WriteString(",")
+			_, _ = sqlBuilder.WriteString(",")
 		}
-		sqlBuilder.WriteString("(")
+		_, _ = sqlBuilder.WriteString("(")
 		for j := range columnCount {
 			if j != 0 {
-				sqlBuilder.WriteString(",")
+				_, _ = sqlBuilder.WriteString(",")
 			}
-			sqlBuilder.WriteString(fmt.Sprintf("$%d", i*columnCount+j+1))
+			_, _ = fmt.Fprintf(&sqlBuilder, "$%d", i*columnCount+j+1)
 		}
-		sqlBuilder.WriteString(")")
+		_, _ = sqlBuilder.WriteString(")")
 	}
 
 	targetSQL := sqlBuilder.String()

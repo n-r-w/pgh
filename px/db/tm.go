@@ -20,9 +20,9 @@ func (p *PxDB) beginTxHelper(ctx context.Context, opts txmgr.Options) (*pgxpool.
 		p.testHookAfterAcquire()
 	}
 
-	if err := ctx.Err(); err != nil {
+	if ctxErr := ctx.Err(); ctxErr != nil {
 		con.Release()
-		return nil, nil, fmt.Errorf("failed to begin transaction: %w", err)
+		return nil, nil, fmt.Errorf("failed to begin transaction: %w", ctxErr)
 	}
 
 	//nolint:exhaustruct // external type, only set necessary fields
@@ -93,16 +93,15 @@ func (p *PxDB) BeginTx(ctx context.Context, opts txmgr.Options) (context.Context
 }
 
 // InTransaction returns true if transaction is started.
-func (p *PxDB) InTransaction(ctx context.Context) bool {
+func (*PxDB) InTransaction(ctx context.Context) bool {
 	_, ok := txFromContext(ctx)
 	return ok
 }
 
 // TransactionOptions returns transaction parameters. If transaction is not started, returns false.
-func (p *PxDB) TransactionOptions(ctx context.Context) txmgr.Options {
+func (*PxDB) TransactionOptions(ctx context.Context) txmgr.Options {
 	tx, ok := txFromContext(ctx)
 	if !ok {
-		//nolint:exhaustruct // external type, zero values are acceptable defaults
 		return txmgr.Options{}
 	}
 
@@ -110,7 +109,7 @@ func (p *PxDB) TransactionOptions(ctx context.Context) txmgr.Options {
 }
 
 // WithoutTransaction returns context without transaction.
-func (p *PxDB) WithoutTransaction(ctx context.Context) context.Context {
+func (*PxDB) WithoutTransaction(ctx context.Context) context.Context {
 	return WithoutTransaction(ctx)
 }
 
@@ -119,14 +118,12 @@ func getPgxLevel(level txmgr.TransactionLevel) pgx.TxIsoLevel {
 	switch level {
 	case txmgr.TxReadUncommitted:
 		return pgx.ReadUncommitted
-	case txmgr.TxReadCommitted:
+	case txmgr.TxReadCommitted, txmgr.TxLevelDefault:
 		return pgx.ReadCommitted
 	case txmgr.TxRepeatableRead:
 		return pgx.RepeatableRead
 	case txmgr.TxSerializable:
 		return pgx.Serializable
-	case txmgr.TxLevelDefault:
-		return pgx.ReadCommitted
 	default:
 		panic("internal error")
 	}
@@ -137,9 +134,7 @@ func getPgxMode(mode txmgr.TransactionMode) pgx.TxAccessMode {
 	switch mode {
 	case txmgr.TxReadOnly:
 		return pgx.ReadOnly
-	case txmgr.TxReadWrite:
-		return pgx.ReadWrite
-	case txmgr.TxModeDefault:
+	case txmgr.TxReadWrite, txmgr.TxModeDefault:
 		return pgx.ReadWrite
 	default:
 		panic("internal error")
@@ -176,7 +171,7 @@ func (t *transaction) toContext(ctx context.Context) context.Context {
 }
 
 // removeFromContext removes transaction from context.
-func (t *transaction) removeFromContext(ctx context.Context) context.Context {
+func (*transaction) removeFromContext(ctx context.Context) context.Context {
 	return context.WithValue(ctx, txKey, nil)
 }
 

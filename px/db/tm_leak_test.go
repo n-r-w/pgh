@@ -23,7 +23,7 @@ func TestBeginTxHelper_ConnectionLeak_Simulation(t *testing.T) {
 		WithDSN(informer.DSN()),
 	)
 
-	ctx := context.Background()
+	ctx := t.Context()
 
 	ctxStart, cancelStart := context.WithTimeout(ctx, 5*time.Second)
 	t.Cleanup(cancelStart)
@@ -52,7 +52,7 @@ func TestBeginTxHelper_ConnectionLeak_Simulation(t *testing.T) {
 		pxDB.testHookAfterAcquire = nil
 	})
 
-	_, _, errBegin := pxDB.beginTxHelper(ctxBeginTx, txmgr.Options{}) //nolint:exhaustruct // testing zero-value options
+	_, _, errBegin := pxDB.beginTxHelper(ctxBeginTx, txmgr.Options{})
 	require.Error(t, errBegin, "beginTxHelper should fail when BeginTx fails")
 	require.ErrorIs(t, errBegin, context.Canceled, "error should wrap context.Canceled")
 	t.Logf("beginTxHelper failed as expected: %v", errBegin)

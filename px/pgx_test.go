@@ -1,4 +1,3 @@
-//nolint:prealloc //ok
 package px
 
 import (
@@ -27,7 +26,7 @@ func (s suffixImpl) ToSql() (string, []any, error) {
 // Test_InsertSplit_SendBatch tests InsertSplit and SendBatch.
 func Test_InsertSplit_SendBatch(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
+	ctx := t.Context()
 
 	const (
 		rowsCount = 100
@@ -85,7 +84,7 @@ func Test_InsertSplit_SendBatch(t *testing.T) {
 
 func Test_InsertSplit(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
+	ctx := t.Context()
 
 	const (
 		rowsCount = 100
@@ -145,7 +144,7 @@ func Test_InsertSplit(t *testing.T) {
 
 func Test_InsertSplitQuery(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
+	ctx := t.Context()
 
 	const (
 		rowsCount = 100
@@ -227,12 +226,11 @@ func Test_InsertSplitQuery(t *testing.T) {
 func Test_SendBatchQuery(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.Background()
+	ctx := t.Context()
 
 	mc := gomock.NewController(t)
 	defer mc.Finish()
 
-	//nolint:exhaustruct // external type, QueuedQueries is managed by Queue method
 	batch := &pgx.Batch{}
 	batch.Queue("SELECT * FROM test_table WHERE id = $1", 1)
 	batch.Queue("SELECT * FROM test_table WHERE id = $1", 2)
@@ -283,7 +281,7 @@ func Test_SendBatchQuery(t *testing.T) {
 func Test_ExecSplit(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.Background()
+	ctx := t.Context()
 
 	mc := gomock.NewController(t)
 	defer mc.Finish()
@@ -330,7 +328,7 @@ func Test_ExecSplit(t *testing.T) {
 func TestInsertValues(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.Background()
+	ctx := t.Context()
 
 	mc := gomock.NewController(t)
 	defer mc.Finish()
@@ -364,7 +362,7 @@ func TestSelectFuncPlain(t *testing.T) {
 	mockQuerier := NewMockIQuerier(ctrl)
 	mockRows := NewMockRows(ctrl)
 
-	ctx := context.Background()
+	ctx := t.Context()
 	sql := "SELECT * FROM table"
 	args := pgh.Args{1, "test"}
 
@@ -388,7 +386,7 @@ func TestSelectFuncPlain(t *testing.T) {
 func TestExecBatch(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.Background()
+	ctx := t.Context()
 
 	mc := gomock.NewController(t)
 	defer mc.Finish()
