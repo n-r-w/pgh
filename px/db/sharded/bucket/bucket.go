@@ -50,7 +50,7 @@ type BucketID uint //nolint:revive // used as is
 
 // String converts BucketID to string.
 func (b BucketID) String() string {
-	return strconv.Itoa(int(b)) //nolint:gosec // safe
+	return strconv.Itoa(int(b))
 }
 
 // Schema returns the database schema name for the bucket.
@@ -66,7 +66,7 @@ type BucketRange struct { //nolint:revive // used as is
 
 // Count number of buckets in the range.
 func (b BucketRange) Count() int {
-	return int(b.ToID - b.FromID + 1) //nolint:gosec // safe
+	return int(b.ToID - b.FromID + 1)
 }
 
 // NewBucketRange creates a range of buckets.
@@ -91,7 +91,7 @@ func UniformBucketFn(n int) func(shardKey string) BucketID {
 	return func(key string) BucketID {
 		h := fnv.New32a()
 		_, _ = io.WriteString(h, key)
-		return BucketID(int(h.Sum32()) % n) //nolint:gosec // safe
+		return BucketID(int(h.Sum32()) % n)
 	}
 }
 
@@ -228,7 +228,7 @@ func (b *DB[T]) ShardConnection(ctx context.Context, shardID shard.ShardID,
 }
 
 // NewBatch creates a new Batch based on the key.
-func (b *DB[T]) NewBatch(bucketID BucketID) *Batch {
+func (*DB[T]) NewBatch(bucketID BucketID) *Batch {
 	return NewBatch(bucketID)
 }
 

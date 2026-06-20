@@ -20,7 +20,7 @@ func TestBucketDB(t *testing.T) {
 	t.Parallel()
 
 	// put logger to context
-	ctx := ctxlog.ToTestContext(context.Background(), t)
+	ctx := ctxlog.ToTestContext(t.Context(), t)
 	// create a wrapper for ctxlog
 	logWrapper := ctxlog.NewWrapper()
 

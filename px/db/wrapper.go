@@ -54,7 +54,7 @@ func (i *Wrapper) TransactionOptions() txmgr.Options {
 }
 
 // WithoutTransaction returns context without transaction.
-func (i *Wrapper) WithoutTransaction(ctx context.Context) context.Context {
+func (*Wrapper) WithoutTransaction(ctx context.Context) context.Context {
 	return WithoutTransaction(ctx)
 }
 
@@ -140,7 +140,7 @@ func (i *Wrapper) SendBatch(ctx context.Context, b *pgx.Batch) (res pgx.BatchRes
 				if j > 0 {
 					_, _ = queries.WriteString(",")
 				}
-				_, _ = queries.WriteString(fmt.Sprintf("%v", arg))
+				_, _ = fmt.Fprintf(&queries, "%v", arg)
 			}
 			_, _ = queries.WriteString("]")
 		}

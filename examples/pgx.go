@@ -90,20 +90,20 @@ func ExampleErrorHandling(err error) {
 			// Handle no rows found
 			// Handles both pgx.ErrNoRows and PostgreSQL 'no_data_found' error code
 			//nolint:forbidigo // example code
-			fmt.Println("No rows found")
+			_, _ = fmt.Println("No rows found")
 		case px.IsUniqueViolation(err):
 			// Handle unique constraint violation
 			// Maps to PostgreSQL error code '23505'
 			//nolint:forbidigo // example code
-			fmt.Println("Unique constraint violation")
+			_, _ = fmt.Println("Unique constraint violation")
 		case px.IsForeignKeyViolation(err):
 			// Handle foreign key violation
 			// Maps to PostgreSQL error code '23503'
 			//nolint:forbidigo // example code
-			fmt.Println("Foreign key violation")
+			_, _ = fmt.Println("Foreign key violation")
 		default:
 			//nolint:forbidigo // example code
-			fmt.Printf("Unknown error: %v\n", err)
+			_, _ = fmt.Printf("Unknown error: %v\n", err)
 		}
 	}
 }
@@ -130,7 +130,7 @@ func ExampleSelectFunc(ctx context.Context, db px.IQuerier) error {
 		}
 		// Process each user here
 		//nolint:forbidigo // example code
-		fmt.Printf("Processing user: %s\n", user.Name)
+		_, _ = fmt.Printf("Processing user: %s\n", user.Name)
 		return nil
 	})
 }

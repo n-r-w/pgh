@@ -1,4 +1,4 @@
-//nolint:mnd,forbidigo,gocritic // ok
+//nolint:mnd,forbidigo,gocritic,gosec // ok for example code
 package main
 
 import (
@@ -117,7 +117,7 @@ func main() {
 			}
 
 			// Print count for this bucket
-			fmt.Printf("Bucket %d on Shard %d has %d users\n", bucketID, shardID, count)
+			_, _ = fmt.Printf("Bucket %d on Shard %d has %d users\n", bucketID, shardID, count)
 			totalUsers += int64(count)
 			return nil
 		})
@@ -125,7 +125,7 @@ func main() {
 		log.Fatalf("Failed to count users: %v", err)
 	}
 
-	fmt.Printf("\nTotal users across all buckets: %d\n", totalUsers)
+	_, _ = fmt.Printf("\nTotal users across all buckets: %d\n", totalUsers)
 
 	// Example of reading user data using email as shard key
 	email := "user1@example.com"
@@ -145,5 +145,5 @@ func main() {
 		log.Fatalf("Failed to get user: %v", err)
 	}
 
-	fmt.Printf("\nFound user: ID=%d, Name=%s, Email=%s\n", user.ID, user.Name, user.Email)
+	_, _ = fmt.Printf("\nFound user: ID=%d, Name=%s, Email=%s\n", user.ID, user.Name, user.Email)
 }

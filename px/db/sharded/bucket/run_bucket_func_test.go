@@ -55,7 +55,7 @@ func TestRunBucketFunc_Deadlock(t *testing.T) {
 
 	done := make(chan error, 1)
 	go func() {
-		done <- bucketDB.RunBucketFunc(context.Background(),
+		done <- bucketDB.RunBucketFunc(t.Context(),
 			func(context.Context, shard.ShardID, BucketID, conn.IConnection) error {
 				return nil
 			},

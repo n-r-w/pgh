@@ -125,7 +125,6 @@ func InsertSplit(
 		idxTo int
 	)
 
-	//nolint:exhaustruct // external type, QueuedQueries is managed by Queue method
 	batch := pgx.Batch{}
 	for idx := 0; idx < l; idx += splitSize {
 		if idxTo = idx + splitSize; idxTo > l {
@@ -170,7 +169,6 @@ func InsertSplitQuery[T any](
 		idxTo int
 	)
 
-	//nolint:exhaustruct // external type, QueuedQueries is managed by Queue method
 	batch := pgx.Batch{}
 	for idx := 0; idx < l; idx += splitSize {
 		if idxTo = idx + splitSize; idxTo > l {
@@ -194,7 +192,6 @@ func InsertSplitQuery[T any](
 
 // ExecBatch executes a batch of queries with error checking. tx can be either pgx.Tx or pg_types.Pool.
 func ExecBatch(ctx context.Context, queries []sq.Sqlizer, tx IBatcher) (rowsAffected int64, err error) {
-	//nolint:exhaustruct // external type, QueuedQueries is managed by Queue method
 	batch := pgx.Batch{}
 
 	for _, query := range queries {
@@ -215,7 +212,6 @@ func ExecBatch(ctx context.Context, queries []sq.Sqlizer, tx IBatcher) (rowsAffe
 
 // SelectBatch executes a batch of queries with error checking. tx can be either pgx.Tx or pg_types.Pool.
 func SelectBatch[T any](ctx context.Context, queries []sq.Sqlizer, tx IBatcher, dst *[]T) error {
-	//nolint:exhaustruct // external type, QueuedQueries is managed by Queue method
 	batch := pgx.Batch{}
 
 	for _, query := range queries {

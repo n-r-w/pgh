@@ -3,7 +3,9 @@ package txmgr
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"sync"
 )
 
 // Options represents transaction manager configuration options.
@@ -83,19 +85,26 @@ func (tm *TransactionManager) prepareBegin(ctx context.Context, opts []Option) (
 }
 
 // Begin starts a new transaction and executes the function.
-func (tm *TransactionManager) Begin(ctx context.Context, f func(ctxTr context.Context) error, opts ...Option) error {
-	tmOpts, err := tm.prepareBegin(ctx, opts)
+func (tm *TransactionManager) Begin(
+	ctx context.Context, f func(ctxTr context.Context) error, opts ...Option,
+) (err error) {
+	ctxTr, finisher, err := tm.BeginTx(ctx, opts...)
 	if err != nil {
 		return err
 	}
 
-	if tm.tmImplementator.InTransaction(ctx) { // transaction is already started
-		// just execute the function
-		return f(ctx)
+	defer func() {
+		if rec := recover(); rec != nil {
+			_ = finisher.Rollback(ctxTr)
+			panic(rec)
+		}
+	}()
+
+	if err = f(ctxTr); err != nil {
+		return errors.Join(err, finisher.Rollback(ctxTr))
 	}
 
-	// transaction is not started yet
-	return tm.tmBeginner.Begin(ctx, f, *tmOpts)
+	return finisher.Commit(ctxTr)
 }
 
 // BeginTx starts a new transaction.
@@ -111,7 +120,20 @@ func (tm *TransactionManager) BeginTx(
 		return ctx, &noopTransactionFinisher{}, nil
 	}
 
-	return tm.tmBeginner.BeginTx(ctx, *tmOpts)
+	hooks := newTransactionHooks()
+	ctxWithHooks := withHooks(ctx, hooks)
+	ctxTr, finisher, err := tm.tmBeginner.BeginTx(ctxWithHooks, *tmOpts)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return withHooks(ctxTr, hooks), &transactionHookFinisher{
+		tm:       tm,
+		next:     finisher,
+		hooks:    hooks,
+		mu:       sync.Mutex{},
+		finished: false,
+	}, nil
 }
 
 // WithoutTransaction returns context without transaction.
@@ -121,10 +143,10 @@ func (tm *TransactionManager) WithoutTransaction(ctx context.Context) context.Co
 
 type noopTransactionFinisher struct{}
 
-func (n *noopTransactionFinisher) Commit(_ context.Context) error {
+func (*noopTransactionFinisher) Commit(_ context.Context) error {
 	return nil
 }
 
-func (n *noopTransactionFinisher) Rollback(_ context.Context) error {
+func (*noopTransactionFinisher) Rollback(_ context.Context) error {
 	return nil
 }

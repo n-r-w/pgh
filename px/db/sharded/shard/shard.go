@@ -26,7 +26,7 @@ type ShardID uint
 
 // String converts ShardID to string.
 func (s ShardID) String() string {
-	return strconv.Itoa(int(s)) //nolint:gosec // safe
+	return strconv.Itoa(int(s))
 }
 
 // ShardFunc function to get shard by key.

@@ -47,13 +47,13 @@ func SelectFuncPlain(ctx context.Context, querier IQuerier, sql string, args pgh
 	defer rows.Close()
 
 	for rows.Next() {
-		if err := f(rows); err != nil {
-			return err
+		if rowErr := f(rows); rowErr != nil {
+			return rowErr
 		}
 	}
 
-	if err := rows.Err(); err != nil {
-		return fmt.Errorf("sql select: %w [%s]", err, pgh.TruncSQL(sql))
+	if rowsErr := rows.Err(); rowsErr != nil {
+		return fmt.Errorf("sql select: %w [%s]", rowsErr, pgh.TruncSQL(sql))
 	}
 
 	return nil
@@ -111,7 +111,6 @@ func execSplitPlainHelper(
 	queries []string,
 	args []pgh.Args,
 ) (rowsAffected int64, err error) {
-	//nolint:exhaustruct // external type, QueuedQueries is managed by Queue method
 	batch := pgx.Batch{}
 
 	for idx, query := range queries {
@@ -140,7 +139,6 @@ func InsertSplitPlain(
 		idxTo int
 	)
 
-	//nolint:exhaustruct // external type, QueuedQueries is managed by Queue method
 	batch := pgx.Batch{}
 	for idx := 0; idx < l; idx += splitSize {
 		if idxTo = idx + splitSize; idxTo > l {
@@ -162,9 +160,9 @@ func SendBatch(ctx context.Context, tx IBatcher, batch *pgx.Batch) (rowsAffected
 	br := tx.SendBatch(ctx, batch)
 	defer func() { _ = br.Close() }()
 	for i := range batch.Len() {
-		tag, err := br.Exec()
-		if err != nil {
-			return 0, fmt.Errorf("pgx.SendBatch exec at index %d: %w", i, err)
+		tag, execErr := br.Exec()
+		if execErr != nil {
+			return 0, fmt.Errorf("pgx.SendBatch exec at index %d: %w", i, execErr)
 		}
 		rowsAffected += tag.RowsAffected()
 	}
@@ -188,8 +186,8 @@ func SendBatchQuery[T any](ctx context.Context, tx IBatcher, batch *pgx.Batch, d
 		}
 
 		var dstBatch []T
-		if err := pgxscan.ScanAll(&dstBatch, rows); err != nil {
-			return fmt.Errorf("pgx.SendBatchQuery scan at index %d: %w", i, err)
+		if scanErr := pgxscan.ScanAll(&dstBatch, rows); scanErr != nil {
+			return fmt.Errorf("pgx.SendBatchQuery scan at index %d: %w", i, scanErr)
 		}
 
 		*dst = append(*dst, dstBatch...)
@@ -210,8 +208,8 @@ func InsertValuesPlain(ctx context.Context, querier IQuerier, sql string, values
 		sqlBuilder  strings.Builder
 		columnCount = len(values[0])
 	)
-	sqlBuilder.WriteString(sql)
-	sqlBuilder.WriteString(" VALUES ")
+	_, _ = sqlBuilder.WriteString(sql)
+	_, _ = sqlBuilder.WriteString(" VALUES ")
 	for _, v := range values {
 		if len(v) != columnCount {
 			return fmt.Errorf("pgx.InsertValues: all values must have the same length. sql: %s", pgh.TruncSQL(sql))
@@ -221,16 +219,16 @@ func InsertValuesPlain(ctx context.Context, querier IQuerier, sql string, values
 
 	for i := range values {
 		if i != 0 {
-			sqlBuilder.WriteString(",")
+			_, _ = sqlBuilder.WriteString(",")
 		}
-		sqlBuilder.WriteString("(")
+		_, _ = sqlBuilder.WriteString("(")
 		for j := range columnCount {
 			if j != 0 {
-				sqlBuilder.WriteString(",")
+				_, _ = sqlBuilder.WriteString(",")
 			}
-			sqlBuilder.WriteString(fmt.Sprintf("$%d", i*columnCount+j+1))
+			_, _ = fmt.Fprintf(&sqlBuilder, "$%d", i*columnCount+j+1)
 		}
-		sqlBuilder.WriteString(")")
+		_, _ = sqlBuilder.WriteString(")")
 	}
 
 	targetSQL := sqlBuilder.String()
