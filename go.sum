@@ -113,8 +113,8 @@ github.com/n-r-w/bootstrap v1.1.0 h1:FZ3SPvq3DjWU96FrELZBeQU0K33NYA2KH4ZTFdWbb2U
 github.com/n-r-w/bootstrap v1.1.0/go.mod h1:EjhTpWwCX/tCPF76H3ClfgLWgO29QvnntzftH7tdqKc=
 github.com/n-r-w/ctxlog v1.1.3 h1:fiL/JInbiyeEEMq1z+Yi+hIDvivFo6hthJ88NIcNwy0=
 github.com/n-r-w/ctxlog v1.1.3/go.mod h1:E0k0oiGsekE7mQ1+n8RdzBcL5rbWEKEr7NfLvw5wrLo=
-github.com/n-r-w/squirrel v1.5.1 h1:Zvra6guQpPrjlkU9Beo2SGZU/gjxdMiff1sUOhNA62A=
-github.com/n-r-w/squirrel v1.5.1/go.mod h1:oAb4J7EGGQ2fUY+kQ3VkLNldLxTNql/xnQDjQI5933s=
+github.com/n-r-w/squirrel v1.6.0 h1:qv+9XkwT5teHE7LIHWMPfnaJJetJY/HqAMGpX037WBY=
+github.com/n-r-w/squirrel v1.6.0/go.mod h1:wOA9XwJUYuf0WUy/T7zpm53kClRgMhHMvdoHtDyrExI=
 github.com/n-r-w/testdock/v2 v2.5.0 h1:bjl8YegMHXloM7SF2aH0oAYwXdBWAbn0eMH8wS1V8EQ=
 github.com/n-r-w/testdock/v2 v2.5.0/go.mod h1:c6ruz06ZjvuwMI6wcfMqZyV2Zt7M4B6SqkgGOO7F984=
 github.com/ncruces/go-strftime v0.1.9 h1:bY0MQC28UADQmHmaF5dgpLmImcShSi2kHU9XLdhx/f4=
@@ -203,8 +203,8 @@ golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACk
 golang.org/x/crypto v0.0.0-20210921155107-089bfa567519/go.mod h1:GvvjBRRGRdwPK5ydBHafDWAxML/pGHZbMvKqRZ5+Abc=
 golang.org/x/crypto v0.45.0 h1:jMBrvKuj23MTlT0bQEOBcAE0mjg8mK9RXFhRH6nyF3Q=
 golang.org/x/crypto v0.45.0/go.mod h1:XTGrrkGJve7CYK7J8PEww4aY7gM3qMCElcJQ8n8JdX4=
-golang.org/x/exp v0.0.0-20250620022241-b7579e27df2b h1:M2rDM6z3Fhozi9O7NWsxAkg/yqS/lQJ6PmkyIV3YP+o=
-golang.org/x/exp v0.0.0-20250620022241-b7579e27df2b/go.mod h1:3//PLf8L/X+8b4vuAfHzxeRUl04Adcb341+IGKfnqS8=
+golang.org/x/exp v0.0.0-20260611194520-c48552f49976 h1:X8Hz2ImujgbmetVuW+w2YkyZChE3cBpZi2P158rTG9M=
+golang.org/x/exp v0.0.0-20260611194520-c48552f49976/go.mod h1:vnf4pv9iKZXY58sQE1L86zmNWJ4159e1RkcWiLCkeEY=
 golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4/go.mod h1:jJ57K6gSWd91VN4djpZkiMVwK6gcyfeH4XE8wZrZaV4=
 golang.org/x/net v0.0.0-20190620200207-3b0461eec859/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=
 golang.org/x/net v0.0.0-20210226172049-e18ecbb05110/go.mod h1:m0MpNAwzfU5UDzcl9v0D8zg8gWTRqZa9RBIspLL5mdg=

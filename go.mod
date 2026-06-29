@@ -1,6 +1,6 @@
 module github.com/n-r-w/pgh/v2
 
-go 1.26
+go 1.26.0
 
 require (
 	github.com/cenkalti/backoff/v5 v5.0.3
@@ -9,7 +9,7 @@ require (
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/n-r-w/bootstrap v1.1.0
 	github.com/n-r-w/ctxlog v1.1.3
-	github.com/n-r-w/squirrel v1.5.1
+	github.com/n-r-w/squirrel v1.6.0
 	github.com/n-r-w/testdock/v2 v2.5.0
 	github.com/samber/lo v1.53.0
 	github.com/stretchr/testify v1.11.1
@@ -80,7 +80,7 @@ require (
 	go.uber.org/zap v1.27.1 // indirect
 	go.uber.org/zap/exp v0.3.0 // indirect
 	golang.org/x/crypto v0.45.0 // indirect
-	golang.org/x/exp v0.0.0-20250620022241-b7579e27df2b // indirect
+	golang.org/x/exp v0.0.0-20260611194520-c48552f49976 // indirect
 	golang.org/x/sys v0.38.0 // indirect
 	golang.org/x/text v0.31.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
