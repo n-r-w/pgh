@@ -93,18 +93,22 @@ func (tm *TransactionManager) Begin(
 		return err
 	}
 
+	finished := false
 	defer func() {
-		if rec := recover(); rec != nil {
+		if !finished {
 			_ = finisher.Rollback(ctxTr)
-			panic(rec)
 		}
 	}()
 
 	if err = f(ctxTr); err != nil {
-		return errors.Join(err, finisher.Rollback(ctxTr))
+		rollbackErr := finisher.Rollback(ctxTr)
+		finished = true
+		return errors.Join(err, rollbackErr)
 	}
 
-	return finisher.Commit(ctxTr)
+	err = finisher.Commit(ctxTr)
+	finished = true
+	return err
 }
 
 // BeginTx starts a new transaction.
