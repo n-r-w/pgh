@@ -65,8 +65,7 @@ metadata:
         }
 
         func (r *OrderRepositoryImpl) Create(ctx context.Context, order Order) error {
-            // Connection() extracts transaction from context (if present)
-            // or returns pool connection (if no transaction)
+            // Connection selects the transaction, pinned session, or pool.
             connection := r.db.Connection(ctx)
 
             query := pgh.Builder().
@@ -140,7 +139,7 @@ metadata:
         Hook rules:
         1. `AfterCommit` runs only after a successful commit.
         2. `AfterRollback` runs only after a successful rollback.
-        3. Hooks receive a context without an active transaction.
+        3. Hooks receive a context without an active transaction. A pinned session stays in the hook context.
         4. Registering a non-nil hook outside a txmgr-managed transaction returns `txmgr.ErrNoTransactionHooks`.
         5. Nil hooks are ignored and return nil.
         6. Hook functions do not return errors. Handle hook failures inside the hook.
@@ -158,16 +157,14 @@ metadata:
 
         // Execute operations
         if err := r.orderRepo.Create(ctxTx, order); err != nil {
-            _ = finisher.Rollback(ctx)
-            return err
+            return errors.Join(err, finisher.Rollback(ctxTx))
         }
 
         if err := txmgr.AfterCommit(ctxTx, func(ctx context.Context) {
             // ctx has no active transaction.
             publisher.Publish(ctx, order.CreatedEvent())
         }); err != nil {
-            _ = finisher.Rollback(ctx)
-            return err
+            return errors.Join(err, finisher.Rollback(ctxTx))
         }
 
         // Explicit commit
@@ -194,8 +191,16 @@ metadata:
         }
         ```
     </nested_transactions>
+    <pinned_sessions>
+        1. Follow [session rules](../pgh-px-db/SKILL.md) to open the scope.
+        2. Pass the session context to `tm.Begin` or `tm.BeginTx`. Use the returned transaction context for all transaction queries and manual `Commit` or `Rollback` calls.
+        3. After commit or rollback, use the session context for further work. Do not reuse the finished transaction context.
+        4. Return transaction completion errors. A commit error does not prove that changes were rolled back.
+    </pinned_sessions>
     <bypass_transaction>
-        Execute query outside current transaction:
+        `WithoutTransaction` removes only the transaction. It keeps a pinned session.
+        While a pinned transaction is active, SQL through this context returns `db.ErrPinnedSessionTransactionActive`. Do not use the pool to bypass this error.
+        Without a pinned session, use the pool to execute outside the transaction:
 
         ```go
         func (r *RepoImpl) LogOperation(ctx context.Context, msg string) error {
