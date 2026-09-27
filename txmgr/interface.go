@@ -1,6 +1,6 @@
 package txmgr
 
-//go:generate mockgen -source interface.go -destination interface_mock.go -package txmgr
+//go:generate go tool mockgen -source interface.go -destination interface_mock.go -package txmgr
 
 import "context"
 

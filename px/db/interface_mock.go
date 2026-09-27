@@ -21,6 +21,7 @@ import (
 type MockIConnectionGetter struct {
 	ctrl     *gomock.Controller
 	recorder *MockIConnectionGetterMockRecorder
+	isgomock struct{}
 }
 
 // MockIConnectionGetterMockRecorder is the mock recorder for MockIConnectionGetter.
@@ -63,6 +64,7 @@ func (mr *MockIConnectionGetterMockRecorder) Connection(ctx any, opt ...any) *go
 type MockIStartStopConnector struct {
 	ctrl     *gomock.Controller
 	recorder *MockIStartStopConnectorMockRecorder
+	isgomock struct{}
 }
 
 // MockIStartStopConnectorMockRecorder is the mock recorder for MockIStartStopConnector.
@@ -127,4 +129,66 @@ func (m *MockIStartStopConnector) Stop(ctx context.Context) error {
 func (mr *MockIStartStopConnectorMockRecorder) Stop(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Stop", reflect.TypeOf((*MockIStartStopConnector)(nil).Stop), ctx)
+}
+
+// MockIPinnedSessionConnector is a mock of IPinnedSessionConnector interface.
+type MockIPinnedSessionConnector struct {
+	ctrl     *gomock.Controller
+	recorder *MockIPinnedSessionConnectorMockRecorder
+	isgomock struct{}
+}
+
+// MockIPinnedSessionConnectorMockRecorder is the mock recorder for MockIPinnedSessionConnector.
+type MockIPinnedSessionConnectorMockRecorder struct {
+	mock *MockIPinnedSessionConnector
+}
+
+// NewMockIPinnedSessionConnector creates a new mock instance.
+func NewMockIPinnedSessionConnector(ctrl *gomock.Controller) *MockIPinnedSessionConnector {
+	mock := &MockIPinnedSessionConnector{ctrl: ctrl}
+	mock.recorder = &MockIPinnedSessionConnectorMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockIPinnedSessionConnector) EXPECT() *MockIPinnedSessionConnectorMockRecorder {
+	return m.recorder
+}
+
+// Connection mocks base method.
+func (m *MockIPinnedSessionConnector) Connection(ctx context.Context, opt ...conn.ConnectionOption) conn.IConnection {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx}
+	for _, a := range opt {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Connection", varargs...)
+	ret0, _ := ret[0].(conn.IConnection)
+	return ret0
+}
+
+// Connection indicates an expected call of Connection.
+func (mr *MockIPinnedSessionConnectorMockRecorder) Connection(ctx any, opt ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx}, opt...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Connection", reflect.TypeOf((*MockIPinnedSessionConnector)(nil).Connection), varargs...)
+}
+
+// RunPinnedSession mocks base method.
+func (m *MockIPinnedSessionConnector) RunPinnedSession(ctx context.Context, f func(context.Context) error, opts ...PinnedSessionOption) error {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, f}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "RunPinnedSession", varargs...)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RunPinnedSession indicates an expected call of RunPinnedSession.
+func (mr *MockIPinnedSessionConnectorMockRecorder) RunPinnedSession(ctx, f any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, f}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunPinnedSession", reflect.TypeOf((*MockIPinnedSessionConnector)(nil).RunPinnedSession), varargs...)
 }
