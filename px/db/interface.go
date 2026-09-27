@@ -20,3 +20,11 @@ type IStartStopConnector interface {
 	Stop(ctx context.Context) error
 	Connection(ctx context.Context, opt ...conn.ConnectionOption) conn.IConnection
 }
+
+// IPinnedSessionConnector даёт соединения и закреплённую сессию: всё, что нужно коду,
+// который удерживает одно соединение на несколько запросов и транзакций.
+type IPinnedSessionConnector interface {
+	IConnectionGetter
+	// RunPinnedSession выполняет f на одном соединении пула и освобождает его по выходе.
+	RunPinnedSession(ctx context.Context, f func(context.Context) error, opts ...PinnedSessionOption) error
+}
