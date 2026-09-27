@@ -110,14 +110,15 @@ func (p *PxDB) Connection(ctx context.Context, opt ...conn.ConnectionOption) con
 		o(opts)
 	}
 
-	it, ok := txFromContext(ctx)
+	session, _ := pinnedSessionFromContext(ctx)
+	transaction, ok := txFromContext(ctx)
 	if !ok {
-		return newDatabaseWrapperNoTran(p, opts.LogQueries || p.logQueries)
+		return newDatabaseWrapperNoTran(p, session, opts.LogQueries || p.logQueries)
 	}
 
-	if p != it.db {
+	if p != transaction.db {
 		panic("invalid DB") // this should never happen
 	}
 
-	return newDatabaseWrapperWithTran(p, it.tx, it.opts, opts.LogQueries || p.logQueries)
+	return newDatabaseWrapperWithTran(p, session, transaction, opts.LogQueries || p.logQueries)
 }
