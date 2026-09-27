@@ -1,7 +1,7 @@
 package px
 
-//go:generate mockgen -source interface.go -destination interface_mock.go -package px
-//go:generate mockgen -package px -destination pgx_mock.go github.com/jackc/pgx/v5 BatchResults,Row,Rows,Tx
+//go:generate go tool mockgen -source interface.go -destination interface_mock.go -package px
+//go:generate go tool mockgen -package px -destination pgx_mock.go github.com/jackc/pgx/v5 BatchResults,Row,Rows,Tx
 
 import (
 	"context"

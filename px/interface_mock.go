@@ -22,6 +22,7 @@ import (
 type MockIQuerier struct {
 	ctrl     *gomock.Controller
 	recorder *MockIQuerierMockRecorder
+	isgomock struct{}
 }
 
 // MockIQuerierMockRecorder is the mock recorder for MockIQuerier.
@@ -85,6 +86,7 @@ func (mr *MockIQuerierMockRecorder) Query(ctx, query any, args ...any) *gomock.C
 type MockIBatcher struct {
 	ctrl     *gomock.Controller
 	recorder *MockIBatcherMockRecorder
+	isgomock struct{}
 }
 
 // MockIBatcherMockRecorder is the mock recorder for MockIBatcher.
@@ -122,6 +124,7 @@ func (mr *MockIBatcherMockRecorder) SendBatch(ctx, b any) *gomock.Call {
 type MockITransactionBeginner struct {
 	ctrl     *gomock.Controller
 	recorder *MockITransactionBeginnerMockRecorder
+	isgomock struct{}
 }
 
 // MockITransactionBeginnerMockRecorder is the mock recorder for MockITransactionBeginner.

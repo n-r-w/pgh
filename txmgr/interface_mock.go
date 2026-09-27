@@ -20,6 +20,7 @@ import (
 type MockITransactionInformer struct {
 	ctrl     *gomock.Controller
 	recorder *MockITransactionInformerMockRecorder
+	isgomock struct{}
 }
 
 // MockITransactionInformerMockRecorder is the mock recorder for MockITransactionInformer.
@@ -71,6 +72,7 @@ func (mr *MockITransactionInformerMockRecorder) TransactionOptions(ctx any) *gom
 type MockITransactionFinisher struct {
 	ctrl     *gomock.Controller
 	recorder *MockITransactionFinisherMockRecorder
+	isgomock struct{}
 }
 
 // MockITransactionFinisherMockRecorder is the mock recorder for MockITransactionFinisher.
@@ -122,6 +124,7 @@ func (mr *MockITransactionFinisherMockRecorder) Rollback(ctx any) *gomock.Call {
 type MockITransactionBeginner struct {
 	ctrl     *gomock.Controller
 	recorder *MockITransactionBeginnerMockRecorder
+	isgomock struct{}
 }
 
 // MockITransactionBeginnerMockRecorder is the mock recorder for MockITransactionBeginner.
@@ -189,6 +192,7 @@ func (mr *MockITransactionBeginnerMockRecorder) WithoutTransaction(ctx any) *gom
 type MockITransactionManager struct {
 	ctrl     *gomock.Controller
 	recorder *MockITransactionManagerMockRecorder
+	isgomock struct{}
 }
 
 // MockITransactionManagerMockRecorder is the mock recorder for MockITransactionManager.

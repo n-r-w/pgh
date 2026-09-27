@@ -5,8 +5,8 @@ import (
 	"database/sql"
 )
 
-//go:generate mockgen -source interface.go -destination interface_mock.go -package pq
-//go:generate mockgen -package pq -destination sql_mock.go database/sql/driver Rows,Result
+//go:generate go tool mockgen -source interface.go -destination interface_mock.go -package pq
+//go:generate go tool mockgen -package pq -destination sql_mock.go database/sql/driver Rows,Result
 
 // IQuerier - a subset of sql.DB, sql.Conn and sql.Tx for queries.
 type IQuerier interface {

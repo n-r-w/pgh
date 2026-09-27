@@ -9,7 +9,7 @@ import (
 	"github.com/n-r-w/pgh/v2/txmgr"
 )
 
-//go:generate mockgen -source connection.go -destination connection_mock.go -package conn
+//go:generate go tool mockgen -source connection.go -destination connection_mock.go -package conn
 
 // IConnection includes methods from pgxpool.Pool, pgx.Conn and pgx.Tx + methods for checking transaction state.
 type IConnection interface {

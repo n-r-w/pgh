@@ -23,6 +23,7 @@ import (
 type MockIConnection struct {
 	ctrl     *gomock.Controller
 	recorder *MockIConnectionMockRecorder
+	isgomock struct{}
 }
 
 // MockIConnectionMockRecorder is the mock recorder for MockIConnection.
@@ -184,74 +185,4 @@ func (m *MockIConnection) WithoutTransaction(ctx context.Context) context.Contex
 func (mr *MockIConnectionMockRecorder) WithoutTransaction(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithoutTransaction", reflect.TypeOf((*MockIConnection)(nil).WithoutTransaction), ctx)
-}
-
-// MockIStartStopConnector is a mock of IStartStopConnector interface.
-type MockIStartStopConnector struct {
-	ctrl     *gomock.Controller
-	recorder *MockIStartStopConnectorMockRecorder
-}
-
-// MockIStartStopConnectorMockRecorder is the mock recorder for MockIStartStopConnector.
-type MockIStartStopConnectorMockRecorder struct {
-	mock *MockIStartStopConnector
-}
-
-// NewMockIStartStopConnector creates a new mock instance.
-func NewMockIStartStopConnector(ctrl *gomock.Controller) *MockIStartStopConnector {
-	mock := &MockIStartStopConnector{ctrl: ctrl}
-	mock.recorder = &MockIStartStopConnectorMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockIStartStopConnector) EXPECT() *MockIStartStopConnectorMockRecorder {
-	return m.recorder
-}
-
-// Connection mocks base method.
-func (m *MockIStartStopConnector) Connection(ctx context.Context, opt ...ConnectionOption) IConnection {
-	m.ctrl.T.Helper()
-	varargs := []any{ctx}
-	for _, a := range opt {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "Connection", varargs...)
-	ret0, _ := ret[0].(IConnection)
-	return ret0
-}
-
-// Connection indicates an expected call of Connection.
-func (mr *MockIStartStopConnectorMockRecorder) Connection(ctx any, opt ...any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx}, opt...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Connection", reflect.TypeOf((*MockIStartStopConnector)(nil).Connection), varargs...)
-}
-
-// Start mocks base method.
-func (m *MockIStartStopConnector) Start(ctx context.Context) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Start", ctx)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Start indicates an expected call of Start.
-func (mr *MockIStartStopConnectorMockRecorder) Start(ctx any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Start", reflect.TypeOf((*MockIStartStopConnector)(nil).Start), ctx)
-}
-
-// Stop mocks base method.
-func (m *MockIStartStopConnector) Stop(ctx context.Context) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Stop", ctx)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Stop indicates an expected call of Stop.
-func (mr *MockIStartStopConnectorMockRecorder) Stop(ctx any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Stop", reflect.TypeOf((*MockIStartStopConnector)(nil).Stop), ctx)
 }
