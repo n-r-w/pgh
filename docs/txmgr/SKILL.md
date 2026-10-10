@@ -144,6 +144,30 @@ metadata:
         5. Nil hooks are ignored and return nil.
         6. Hook functions do not return errors. Handle hook failures inside the hook.
     </transaction_hooks>
+    <begin_checks>
+        Register a begin check in a context when each new transaction started from this context must first pass a check inside the transaction, for example a lease check with `SELECT ... FOR KEY SHARE`:
+
+        ```go
+        ownedCtx := txmgr.WithBeginCheck(ctx, func(ctxTx context.Context) error {
+            // ctxTx has the new transaction.
+            return leaseRepo.CheckLease(ctxTx, token)
+        })
+
+        // Usecases receive ownedCtx and the plain transaction manager.
+        err := tm.Begin(ownedCtx, func(ctxTx context.Context) error {
+            // CheckLease has already passed in this transaction.
+            return orderRepo.Create(ctxTx, order)
+        })
+        ```
+
+        Begin check rules:
+        1. The manager runs checks right after it starts a new transaction, before `Begin` calls the function and before `BeginTx` returns.
+        2. Checks run in registration order. Each `WithBeginCheck` call adds one check to the checks of the parent context.
+        3. A nested `Begin` or `BeginTx` that joins an existing transaction does not run checks.
+        4. A transaction started from a context after `WithoutTransaction` runs checks again: `WithoutTransaction` removes only the transaction from the context.
+        5. When a check returns an error, the manager rolls back the transaction, runs `AfterRollback` hooks, and returns the check error joined with the rollback error.
+        6. A nil check leaves the context unchanged.
+    </begin_checks>
     <manual_control>
         For cases requiring explicit commit/rollback control:
 
@@ -179,15 +203,17 @@ metadata:
         - If transaction exists with different options → returns error
         - No transaction → starts new one
 
+        The manager compares option values as passed. `TxLevelDefault` and explicit `TxReadCommitted` are different values, so a nested call without options inside a transaction with `WithTransactionLevel(txmgr.TxReadCommitted)` returns `transaction level mismatch` error. Pass the same options to outer and nested calls.
+
         ```go
         func (u *Usecase) OuterOperation(ctx context.Context) error {
             return u.tm.Begin(ctx, func(ctxTx context.Context) error {
-                // This works - same transaction is reused
+                // Same options, so the same transaction is reused
                 return u.tm.Begin(ctxTx, func(ctxInner context.Context) error {
                     // Still in the same transaction
                     return u.repo.DoSomething(ctxInner)
                 }) // No separate commit - outer transaction controls it
-            }, txmgr.WithTransactionLevel(txmgr.TxReadCommitted))
+            })
         }
         ```
     </nested_transactions>

@@ -131,13 +131,22 @@ func (tm *TransactionManager) BeginTx(
 		return nil, nil, err
 	}
 
-	return withHooks(ctxTr, hooks), &transactionHookFinisher{
+	ctxTr = withHooks(ctxTr, hooks)
+	hookFinisher := &transactionHookFinisher{
 		tm:       tm,
 		next:     finisher,
 		hooks:    hooks,
 		mu:       sync.Mutex{},
 		finished: false,
-	}, nil
+	}
+
+	for _, check := range beginChecks(ctx) {
+		if err = check(ctxTr); err != nil {
+			return nil, nil, errors.Join(err, hookFinisher.Rollback(ctxTr))
+		}
+	}
+
+	return ctxTr, hookFinisher, nil
 }
 
 // WithoutTransaction returns context without transaction.

@@ -357,3 +357,102 @@ func TestTransactionManager_Begin_CommitErrorSkipsHooks(t *testing.T) {
 	require.ErrorIs(t, err, commitErr)
 	require.False(t, called)
 }
+
+// TestWithBeginCheck_Nil tests that a nil check leaves the context unchanged.
+func TestWithBeginCheck_Nil(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+
+	require.Equal(t, ctx, WithBeginCheck(ctx, nil))
+}
+
+// TestTransactionManager_BeginTx_RunsBeginChecks tests that checks run once in a new transaction in registration order.
+func TestTransactionManager_BeginTx_RunsBeginChecks(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+
+	mc := gomock.NewController(t)
+	defer mc.Finish()
+
+	baseFinisher := NewMockITransactionFinisher(mc)
+	baseFinisher.EXPECT().Commit(gomock.Any()).Return(nil)
+
+	tmBeginner := NewMockITransactionBeginner(mc)
+	tmBeginner.EXPECT().
+		BeginTx(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, _ Options) (context.Context, ITransactionFinisher, error) {
+			// The beginner gets the context with checks, and the transaction context keeps them.
+			return context.WithValue(ctx, transactionMarkerKey{}, true), baseFinisher, nil
+		})
+	tmBeginner.EXPECT().WithoutTransaction(gomock.Any()).Return(ctx)
+
+	tmInformer := NewMockITransactionInformer(mc)
+	tmInformer.EXPECT().InTransaction(gomock.Any()).DoAndReturn(func(ctx context.Context) bool {
+		inTransaction, _ := ctx.Value(transactionMarkerKey{}).(bool)
+		return inTransaction
+	}).AnyTimes()
+	tmInformer.EXPECT().TransactionOptions(gomock.Any()).Return(Options{}).AnyTimes()
+
+	tm := New(tmBeginner, tmInformer)
+	order := make([]string, 0, 2)
+	ctxChecked := WithBeginCheck(ctx, func(ctx context.Context) error {
+		require.True(t, ctx.Value(transactionMarkerKey{}).(bool))
+		order = append(order, "first")
+		return nil
+	})
+	ctxChecked = WithBeginCheck(ctxChecked, func(context.Context) error {
+		order = append(order, "second")
+		return nil
+	})
+
+	ctxTx, finisher, err := tm.BeginTx(ctxChecked)
+	require.NoError(t, err)
+	require.Equal(t, []string{"first", "second"}, order)
+
+	// The nested call joins the checked transaction and does not run checks again.
+	_, _, err = tm.BeginTx(ctxTx)
+	require.NoError(t, err)
+	require.Equal(t, []string{"first", "second"}, order)
+
+	require.NoError(t, finisher.Commit(ctxTx))
+}
+
+// TestTransactionManager_Begin_BeginCheckErrorRollsBack tests that a failed check rolls back the new transaction.
+func TestTransactionManager_Begin_BeginCheckErrorRollsBack(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+	txCtx := context.WithValue(ctx, transactionMarkerKey{}, true)
+	checkErr := errors.New("check failed")
+
+	mc := gomock.NewController(t)
+	defer mc.Finish()
+
+	baseFinisher := NewMockITransactionFinisher(mc)
+	baseFinisher.EXPECT().Rollback(gomock.Any()).DoAndReturn(func(ctx context.Context) error {
+		require.True(t, ctx.Value(transactionMarkerKey{}).(bool))
+		return nil
+	})
+
+	tmBeginner := NewMockITransactionBeginner(mc)
+	tmBeginner.EXPECT().BeginTx(gomock.Any(), gomock.Any()).Return(txCtx, baseFinisher, nil)
+	tmBeginner.EXPECT().WithoutTransaction(gomock.Any()).Return(ctx)
+
+	tmInformer := NewMockITransactionInformer(mc)
+	tmInformer.EXPECT().InTransaction(gomock.Any()).Return(false).Times(2)
+
+	tm := New(tmBeginner, tmInformer)
+	called := false
+
+	err := tm.Begin(WithBeginCheck(ctx, func(context.Context) error {
+		return checkErr
+	}), func(context.Context) error {
+		called = true
+		return nil
+	})
+
+	require.ErrorIs(t, err, checkErr)
+	require.False(t, called)
+}
