@@ -3,6 +3,7 @@ package txmgr
 import (
 	"context"
 	"errors"
+	"slices"
 	"sync"
 )
 
@@ -118,4 +119,31 @@ func (h *transactionHooks) rollbackHooks() []func(context.Context) {
 	defer h.mu.Unlock()
 
 	return append([]func(context.Context){}, h.afterRollback...)
+}
+
+// beginChecksKey stores checks that run at the start of each new txmgr-managed transaction.
+type beginChecksKey struct{}
+
+// WithBeginCheck returns a context with fn added to the checks of new transactions.
+// TransactionManager runs the checks in registration order right after it starts a new transaction
+// from this context or its descendants. A nested call that joins an existing transaction does not run them.
+// When a check fails, the manager rolls back the transaction and returns the check error.
+// A nil fn leaves the context unchanged.
+func WithBeginCheck(ctx context.Context, fn func(ctxTx context.Context) error) context.Context {
+	if fn == nil {
+		return ctx
+	}
+
+	// slices.Concat copies the checks, so contexts derived from the same parent do not share them.
+	return context.WithValue(ctx, beginChecksKey{}, slices.Concat(beginChecks(ctx), []func(context.Context) error{fn}))
+}
+
+// beginChecks returns the checks of new transactions registered in the context.
+func beginChecks(ctx context.Context) []func(context.Context) error {
+	checks, ok := ctx.Value(beginChecksKey{}).([]func(context.Context) error)
+	if !ok {
+		return nil
+	}
+
+	return checks
 }
